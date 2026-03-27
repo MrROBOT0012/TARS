@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TARS — Sistema de Gestión Arrocera</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1F7A4D;--green2:#52B788;--green-pale:#D8F3DC;
+  --amber:#B5621B;--amber-pale:#FDEBD0;
+  --red:#9B1C1C;--red-pale:#FEE2E2;
+  --blue:#1A4E8A;--blue-pale:#DBEAFE;
+  --purple:#5B21B6;--purple-pale:#EDE9FE;
+  --teal:#0F6E56;--teal-pale:#E1F5EE;
+  --gray:#3D4451;--gray2:#6B7280;--gray-pale:#F4F5F6;--gray-mid:#E5E7EA;
+  --font:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+body{font-family:var(--font);font-size:14px;color:var(--gray);background:#f0f2f5;min-height:100vh;padding:20px}
+#app{border-radius:10px;overflow:hidden;border:1px solid var(--gray-mid);position:relative;max-width:1150px;margin:0 auto;background:#fff}
+.topbar{background:var(--green);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+.topbar .sub{font-size:11px;opacity:.7;margin-top:1px}
+.nav{display:flex;background:#fff;border-bottom:1.5px solid var(--gray-mid);padding:0 10px;gap:1px;overflow-x:auto}
+.nav button{background:none;border:none;padding:8px 11px;font-size:12px;font-family:var(--font);cursor:pointer;color:var(--gray2);border-bottom:2px solid transparent;margin-bottom:-1.5px;white-space:nowrap;transition:all .15s}
+.nav button.active{color:var(--green);border-bottom-color:var(--green);font-weight:600}
+.nav button:hover:not(.active){background:var(--gray-pale)}
+.content{background:#fff;padding:14px;min-height:500px;border-radius:0 0 10px 10px}
+.cards{display:grid;gap:8px;margin-bottom:14px}
+.cards-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.cards-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cards-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.card{background:var(--gray-pale);border-radius:8px;padding:11px 13px}
+.card .lbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.card .val{font-size:17px;font-weight:600;font-family:var(--mono);line-height:1.2}
+.card .sub{font-size:10px;color:var(--gray2);margin-top:2px}
+.card.g .val{color:var(--green)}.card.r .val{color:var(--red)}.card.a .val{color:var(--amber)}.card.b .val{color:var(--blue)}.card.p .val{color:var(--purple)}.card.t .val{color:var(--teal)}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:9px 11px;background:var(--gray-pale);border-radius:8px}
+.filters label{font-size:11px;color:#999;margin-right:1px}
+.filters select,.filters input[type=text]{font-family:var(--font);font-size:12px;padding:4px 7px;border:1px solid var(--gray-mid);border-radius:5px;background:#fff;color:var(--gray)}
+.btn{font-family:var(--font);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:500;border:none}
+.btn-g{background:var(--green);color:#fff}.btn-g:hover{background:#175e3a}
+.btn-o{background:#fff;border:1px solid var(--gray-mid)!important;color:var(--gray)}.btn-o:hover{background:var(--gray-pale)}
+.btn-b{background:var(--blue);color:#fff}.btn-b:hover{background:#123a6b}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--gray-mid);border-radius:8px;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:var(--gray-pale)}
+th{padding:7px 10px;text-align:left;font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#999;border-bottom:1px solid var(--gray-mid)}
+td{padding:7px 10px;border-bottom:.5px solid var(--gray-mid);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--gray-pale)}
+.num{font-family:var(--mono);font-size:11px}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
+.tg{background:var(--red-pale);color:var(--red)}.ti{background:var(--green-pale);color:var(--green)}
+.tf{background:var(--blue-pale);color:var(--blue)}.tt{background:var(--purple-pale);color:var(--purple)}
+.ta{background:var(--amber-pale);color:var(--amber)}.tk{background:var(--teal-pale);color:var(--teal)}
+.fg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.fg3{grid-template-columns:repeat(3,1fr)}
+.fi{display:flex;flex-direction:column;gap:3px}
+.fi.full{grid-column:1/-1}
+.fi label{font-size:11px;font-weight:500;color:#777}
+.fi input,.fi select{font-family:var(--font);font-size:12px;padding:6px 9px;border:1px solid var(--gray-mid);border-radius:6px;color:var(--gray);background:#fff}
+.fi input:focus,.fi select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 2px rgba(31,122,77,.1)}
+.fi .hint{font-size:10px;color:#aaa;margin-top:1px}
+.fi .calc{font-size:11px;color:var(--green);font-weight:600;background:var(--green-pale);padding:4px 8px;border-radius:4px;margin-top:2px}
+.stitle{font-size:12px;font-weight:600;color:var(--gray);margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--gray-mid)}
+.stitle.amber{border-bottom-color:var(--amber);color:var(--amber)}
+.stitle.blue{border-bottom-color:var(--blue);color:var(--blue)}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.cbox{border:1px solid var(--gray-mid);border-radius:8px;padding:12px}
+.cbox h3{font-size:12px;font-weight:500;margin-bottom:8px;color:var(--gray2)}
+.empty{text-align:center;padding:36px 16px;color:#bbb;font-size:12px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:#fff;border-radius:10px;padding:18px;width:96%;max-width:580px;max-height:90%;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.mh h2{font-size:14px;font-weight:600}
+.mc{background:none;border:none;font-size:20px;cursor:pointer;color:#bbb;line-height:1}.mc:hover{color:var(--red)}
+.mf{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;border-top:1px solid var(--gray-mid);padding-top:12px}
+.bdg{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
+.bdg-p{background:var(--green-pale);color:var(--green)}.bdg-n{background:var(--red-pale);color:var(--red)}
+.pbar-wrap{display:flex;align-items:center;gap:6px}
+.pbar{height:6px;border-radius:3px;min-width:4px}
+.deriv-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.deriv-card{border:1px solid var(--gray-mid);border-radius:8px;padding:10px;text-align:center}
+.deriv-card .dname{font-size:11px;font-weight:600;margin-bottom:4px}
+.deriv-card .dqq{font-size:15px;font-weight:600;font-family:var(--mono)}
+.deriv-card .dprice{font-size:10px;color:var(--gray2);margin-top:2px}
+.ciclo-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.ciclo-card{border:1px solid var(--gray-mid);border-radius:8px;padding:12px;cursor:pointer;transition:.15s;position:relative}
+.ciclo-card:hover{border-color:var(--green);background:var(--gray-pale)}
+.ciclo-card .cn{font-weight:600;font-size:13px}
+.ciclo-card .cm{font-size:11px;color:var(--gray2);margin-top:2px}
+.status-pill{display:inline-block;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:600;margin-left:6px}
+.st-activo{background:var(--green-pale);color:var(--green)}
+.st-cerrado{background:var(--gray-mid);color:var(--gray2)}
+.st-cosecha{background:var(--amber-pale);color:var(--amber)}
+.info-box{background:var(--teal-pale);border-left:3px solid var(--teal);border-radius:0 6px 6px 0;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--teal)}
+
+.spinner{width:32px;height:32px;border:3px solid var(--gray-mid);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f0f2f5;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999}
+.login-box{background:#fff;border-radius:12px;padding:40px;width:340px;box-shadow:0 4px 24px rgba(0,0,0,.1);text-align:center}
+.login-box .logo{font-size:32px;font-weight:800;color:var(--green);margin-bottom:4px;letter-spacing:-.5px}
+.login-box .sub{color:#999;font-size:12px;margin-bottom:24px}
+.login-box input{width:100%;padding:9px 12px;border:1px solid var(--gray-mid);border-radius:7px;font-family:var(--font);font-size:13px;margin-bottom:10px;outline:none;text-align:left;display:block;box-sizing:border-box}
+.login-box input:focus{border-color:var(--green)}
+.btn-login{width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;font-family:var(--font)}
+.btn-login:hover{background:#175e3a}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;display:none}
+.user-pill{display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,.9)}
+.user-pill .uname{font-weight:600}
+.btn-logout{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:10px;padding:3px 9px;border-radius:4px;cursor:pointer;font-family:var(--font)}
+.btn-logout:hover{background:rgba(255,255,255,.3)}
+
+
+.trillo-tabs{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--gray-mid);border-radius:8px;overflow:hidden}
+.trillo-tab{flex:1;padding:9px 6px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;background:#fff;border:none;font-family:var(--font);color:var(--gray2);transition:all .15s}
+.trillo-tab.active{background:var(--green);color:#fff;font-weight:600}
+.trillo-tab:not(:last-child){border-right:1px solid var(--gray-mid)}
+.tab-badge{display:inline-block;background:rgba(0,0,0,.1);color:inherit;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;font-weight:700}
+.trillo-tab.active .tab-badge{background:rgba(255,255,255,.25);color:#fff}
+.st-en_proceso{background:#FEF3C7;color:#B45309}
+.st-preseco{background:var(--red-pale);color:var(--red)}
+.st-seco{background:var(--green-pale);color:var(--green)}
+.st-parcial{background:var(--amber-pale);color:var(--amber)}
+.st-completado{background:var(--teal-pale);color:var(--teal)}
+.viaje-select-box{background:var(--green-pale);border:1px solid var(--green2);border-radius:8px;padding:10px 14px;margin-bottom:14px}
+.viaje-select-box label{font-size:11px;font-weight:600;color:var(--green);display:block;margin-bottom:5px}
+.viaje-select-box select{width:100%;padding:7px 10px;border:1px solid var(--gray-mid);border-radius:6px;font-family:var(--font);font-size:13px;background:#fff}
+
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <div><div style="font-weight:700;font-size:15px;letter-spacing:.3px">TARS</div><div class="sub">Sistema de Gestion Arrocera</div></div>
+  <div class="user-pill" id="user-pill" style="display:none"><span class="uname" id="user-name-tag"></span><button class="btn-logout" onclick="logout()">Salir</button></div>
+</div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span id="topfinca" style="font-size:11px;color:rgba(255,255,255,.75)">Todas las fincas</span>
+    <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;font-size:11px;padding:3px 10px" onclick="exportPDF()">⬇ PDF</button>
+  </div>
+</div>
+<div class="nav">
+  <button class="active" onclick="T('dashboard')">📊 Dashboard</button>
+  <button onclick="T('ciclos')">🔄 Ciclos</button>
+  <button onclick="T('fincas')">📍 Fincas</button>
+  <button onclick="T('campo')">🌱 Campo</button>
+  <button onclick="T('cosecha')">🌾 Cosecha</button>
+  <button onclick="T('bascula')">⚖ Bascula</button>
+  <button onclick="T('trillo')">⚙ Proceso</button>
+  <button onclick="T('ventas')">💰 Ventas</button>
+  <button onclick="T('reportes')">📄 Reportes</button>
+</div>
+<div class="content" id="content"></div>
+<div class="modal-overlay" id="moverlay" style="display:none"><div class="modal" id="mbody"></div></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// TARS v4 - Supabase Cloud Edition
+const SUPA_URL='https://audjnwaqrleujseorzcd.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1ZGpud2FxcmxldWpzZW9yemNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzE4NTgsImV4cCI6MjA4OTYwNzg1OH0.Q0VgHX9P5o1JvgKKzkliVYJoUdheSE3aSRWHvbpvYA8';
+let CURRENT_USER=null;
+
+// SUPABASE AUTH
+async function signIn(email,password){
+  const r=await fetch(SUPA_URL+'/auth/v1/token?grant_type=password',{
+    method:'POST',
+    headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({email,password})
+  });
+  const data=await r.json();
+  if(!r.ok)throw new Error(data.error_description||data.msg||'Error de autenticacion');
+  return data;
+}
+async function signOut(){
+  const token=localStorage.getItem('tars_token');
+  if(token){await fetch(SUPA_URL+'/auth/v1/logout',{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token}}).catch(()=>{});}
+  localStorage.removeItem('tars_token');localStorage.removeItem('tars_user');
+  CURRENT_USER=null;showLoginScreen();
+}
+function getToken(){return localStorage.getItem('tars_token')||SUPA_KEY;}
+
+// SUPABASE REST
+async function sbFetch(table,method,body,query){
+  query=query||'';
+  const opts={method:method||'GET',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+getToken(),'Content-Type':'application/json','Accept':'application/json'}};
+  if(method==='POST')opts.headers['Prefer']='return=representation';
+  if(body)opts.body=JSON.stringify(body);
+  const r=await fetch(SUPA_URL+'/rest/v1/'+table+query,opts);
+  if(r.status===204||method==='DELETE')return[];
+  const data=await r.json();
+  if(!r.ok)throw new Error(JSON.stringify(data));
+  return data;
+}
+const sbGet=(t,q)=>sbFetch(t,'GET',null,q);
+const sbPost=(t,d)=>sbFetch(t,'POST',d);
+const sbPatch=(t,id,d)=>sbFetch(t,'PATCH',d,'?id=eq.'+id);
+const sbDelete=(t,id)=>sbFetch(t,'DELETE',null,'?id=eq.'+id);
+
+// STATE
+let S={
+  fincas:[],ciclos:[],gastos_campo:[],cosechas:[],basculas:[],secados:[],embodegados:[],trillos:[],ventas:[],
+  filtroFinca:'all',filtroCiclo:'all',activeTab:'dashboard',trilloTab:'secado',charts:{}
+};
+
+const DERIVADOS=['arroz_entero','semolina','puntilla','pallana','fina'];
+const DNAMES={arroz_entero:'Arroz entero',semolina:'Semolina',puntilla:'Puntilla',pallana:'Pallana',fina:'Fina'};
+const DCOLORS={arroz_entero:'#1F7A4D',semolina:'#52B788',puntilla:'#B5621B',pallana:'#1A4E8A',fina:'#7C3AED'};
+const MESES_ES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const CAT_CAMPO=['Insumos','Mano de obra','Maquinaria','Transporte','Combustible','Riego','Arriendo/Alquiler','Mantenimiento','Administracion','Otros'];
+const TARIFA_LABELS={descargue:'Descargue',secado:'Secado',mov_patio_bodega:'Mov. patio/sec a bodega',mov_bodega_pila:'Mov. bodega a pila',trillado:'Trillado'};
+
+// LOAD ALL DATA FROM SUPABASE
+async function loadAll(){
+  showSpinner('Sincronizando datos...');
+  try{
+    const [fincas,ciclos,gastos,cosechas,basculas,secados,embodegados,trillos,ventas]=await Promise.all([
+      sbGet('fincas','?order=nombre'),
+      sbGet('ciclos','?order=inicio.desc'),
+      sbGet('gastos_campo','?order=fecha.desc'),
+      sbGet('cosechas','?order=fecha.desc'),
+      sbGet('basculas','?order=fecha.desc'),
+      sbGet('secados','?order=fecha.desc'),
+      sbGet('embodegados','?order=fecha.desc'),
+      sbGet('trillos','?order=fecha.desc'),
+      sbGet('ventas','?order=fecha.desc'),
+    ]);
+    S.fincas=fincas||[];S.ciclos=ciclos||[];S.gastos_campo=gastos||[];
+    S.cosechas=cosechas||[];S.basculas=basculas||[];
+    S.secados=secados||[];S.embodegados=embodegados||[];
+    S.trillos=(trillos||[]).map(t=>{
+      if(typeof t.tarifas==='string')try{t.tarifas=JSON.parse(t.tarifas);}catch(e){t.tarifas={};}
+      if(typeof t.derivados==='string')try{t.derivados=JSON.parse(t.derivados);}catch(e){t.derivados={};}
+      if(!t.tarifas)t.tarifas={};if(!t.derivados)t.derivados={};
+      return t;
+    });
+    S.ventas=ventas||[];
+    T(S.activeTab);
+  }catch(e){
+    document.getElementById('content').innerHTML='<div style="padding:20px;color:var(--red);background:var(--red-pale);border-radius:8px;margin:20px">Error cargando datos: '+e.message+'<br><br><button class="btn btn-g" onclick="loadAll()">Reintentar</button></div>';
+  }
+}
+
+function showSpinner(msg){
+  document.getElementById('content').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:300px;flex-direction:column;gap:12px"><div class="spinner"></div><div style="color:#999;font-size:13px">'+(msg||'Cargando...')+'</div></div>';
+}
+
+// AUTH SCREENS
+function showLoginScreen(){
+  document.getElementById('app').style.display='none';
+  let lw=document.getElementById('login-wrap');
+  if(!lw){lw=document.createElement('div');lw.id='login-wrap';lw.className='login-wrap';document.body.appendChild(lw);}
+  lw.style.display='flex';
+  lw.innerHTML='<div class="login-box"><div class="logo">TARS</div><div class="sub">Sistema de Gestion Arrocera</div><input type="email" id="li-email" placeholder="Correo electronico" autocomplete="email"><input type="password" id="li-pass" placeholder="Contrasena" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')doLogin()"><button class="btn-login" onclick="doLogin()">Entrar</button><div class="login-err" id="li-err"></div></div>';
+}
+
+async function doLogin(){
+  const email=document.getElementById('li-email').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const errEl=document.getElementById('li-err');
+  const btn=document.querySelector('.btn-login');
+  if(!email||!pass){errEl.textContent='Ingresa correo y contrasena';errEl.style.display='block';return;}
+  btn.textContent='Entrando...';btn.disabled=true;errEl.style.display='none';
+  try{
+    const data=await signIn(email,pass);
+    localStorage.setItem('tars_token',data.access_token);
+    localStorage.setItem('tars_user',JSON.stringify({email:data.user.email,id:data.user.id}));
+    CURRENT_USER={email:data.user.email,id:data.user.id};
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-pill').style.display='flex';
+    document.getElementById('user-name-tag').textContent=CURRENT_USER.email.split('@')[0];
+    await loadAll();
+  }catch(e){
+    errEl.textContent=e.message;errEl.style.display='block';
+    btn.textContent='Entrar';btn.disabled=false;
+  }
+}
+
+function logout(){if(confirm('Cerrar sesion?'))signOut();}
+
+// NAV
+function T(tab){
+  S.activeTab=tab;
+  Object.values(S.charts||{}).forEach(c=>{try{c.destroy();}catch(e){}});
+  S.charts={};
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+tab+"'"))b.classList.add('active');});
+  const fns={dashboard:rDashboard,ciclos:rCiclos,fincas:rFincas,campo:rCampo,cosecha:rCosecha,bascula:rBascula,trillo:rTrillo,ventas:rVentas,reportes:rReportes};
+  if(fns[tab])fns[tab]();
+}
+
+function mkDoughnut(id,labels,data,colors){const el=document.getElementById(id);if(!el)return;try{S.charts[id]=new Chart(el,{type:'doughnut',data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+ctx.parsed.toLocaleString();}}}}}})}catch(e){}}
+function mkBar(id,labels,datasets){
+  const el=document.getElementById(id);if(!el)return;
+  try{
+    S.charts[id]=new Chart(el,{
+      type:'bar',
+      data:{labels:labels,datasets:datasets},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:10}}},
+        scales:{
+          x:{ticks:{font:{size:9}}},
+          y:{ticks:{font:{size:9},callback:function(v){return 'C$'+Math.round(v/1000)+'K';}},grid:{color:'rgba(0,0,0,.04)'}}
+        }
+      }
+    });
+  }catch(e){}
+}
+
+// INIT
+(async function init(){
+  const token=localStorage.getItem('tars_token');
+  const userStr=localStorage.getItem('tars_user');
+  if(token&&userStr){
+    try{
+      CURRENT_USER=JSON.parse(userStr);
+      document.getElementById('user-pill').style.display='flex';
+      document.getElementById('user-name-tag').textContent=CURRENT_USER.email.split('@')[0];
+      await loadAll();
+    }catch(e){
+      localStorage.removeItem('tars_token');localStorage.removeItem('tars_user');
+      showLoginScreen();
+    }
+  }else{
+    showLoginScreen();
+  }
+})();
+
+const C$=n=>'C$ '+Math.round(n).toLocaleString('es-NI');
+const fmtQQ=n=>parseFloat(n).toFixed(1)+' qq';
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const gF=id=>S.fincas.find(f=>f.id===id)||{nombre:'N/A',manzanas:0};
+const gC=id=>S.ciclos.find(c=>c.id===id)||{nombre:'N/A'};
+const mesLabel=ym=>{const[y,m]=ym.split('-');return MESES_ES[parseInt(m)-1]+' '+y.slice(2)};
+function getMeses(){return[...new Set([...S.gastos_campo,...S.ventas].map(m=>m.fecha.slice(0,7)))].sort()}
+
+function calcQQseco(neto,hent,hobj){
+  if(!neto||hent<=hobj)return neto;
+  return neto*(100-hent)/(100-hobj);
+}
+function costoTrillo(t){
+  const base=t.qq_seco||t.qq_neto_granza||0;
+  const total=Object.values(t.tarifas||{}).reduce((s,v)=>s+(v||0),0);
+  return base*total;
+}
+function gastosCampo(fi,ci){return S.gastos_campo.filter(g=>(fi==='all'||g.finca_id===fi)&&(ci==='all'||g.ciclo_id===ci)).reduce((s,g)=>s+g.monto,0)}
+function costoTrilloTotal(fi,ci){return S.trillos.filter(t=>(fi==='all'||t.finca_id===fi)&&(ci==='all'||t.ciclo_id===ci)).reduce((s,t)=>s+costoTrillo(t),0)}
+function ingresoVentas(fi,ci){return S.ventas.filter(v=>(fi==='all'||v.finca_id===fi)&&(ci==='all'||v.ciclo_id===ci)).reduce((s,v)=>s+v.qq_vendidos*v.precio_qq,0)}
+function qqCosechados(fi,ci){return S.cosechas.filter(c=>(fi==='all'||c.finca_id===fi)&&(ci==='all'||c.ciclo_id===ci)).reduce((s,c)=>s+c.qq_cosechados,0)}
+function derivadosTotales(fi,ci){
+  const tot={arroz_entero:0,semolina:0,puntilla:0,pallana:0,fina:0};
+  S.trillos.filter(t=>(fi==='all'||t.finca_id===fi)&&(ci==='all'||t.ciclo_id===ci)).forEach(t=>DERIVADOS.forEach(d=>{tot[d]+=(t.derivados[d]||0)}));
+  return tot;
+}
+function kpis(fi,ci){
+  const gc=gastosCampo(fi,ci);const ct=costoTrilloTotal(fi,ci);const gastos=gc+ct;const ing=ingresoVentas(fi,ci);
+  return{gc,ct,gastos,ing,utilidad:ing-gastos,margen:ing>0?(ing-gastos)/ing*100:0,qq:qqCosechados(fi,ci)};
+}
+function costoPorQQ(fi,ci){
+  const k=kpis(fi,ci);
+  const tFilt=S.trillos.filter(t=>(fi==='all'||t.finca_id===fi)&&(ci==='all'||t.ciclo_id===ci));
+  const totSeco=tFilt.reduce((s,t)=>s+(t.qq_seco||0),0);
+  const deriv=derivadosTotales(fi,ci);
+  const qqAE=deriv.arroz_entero||0;
+  const vs=S.ventas.filter(v=>(fi==='all'||v.finca_id===fi)&&(ci==='all'||v.ciclo_id===ci));
+  const qqVendido=vs.reduce((s,v)=>s+v.qq_vendidos,0);
+  const promVenta=qqVendido>0?vs.reduce((s,v)=>s+v.qq_vendidos*v.precio_qq,0)/qqVendido:0;
+  const costoQQseco=totSeco>0?(k.gastos/totSeco):0;
+  const costoQQae=qqAE>0?(k.gastos/qqAE):0;
+  const margenQQ=promVenta>0&&costoQQseco>0?(promVenta-costoQQseco):0;
+  return{costoQQseco,costoQQae,promVenta,margenQQ,totSeco,qqAE};
+}
+
+
+// T() -> defined in supa_header
+
+function rDashboard(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const k=kpis(fi,ci);
+  const deriv=derivadosTotales(fi,ci);
+  const qqMz=()=>{const f=S.fincas.find(x=>x.id===fi);return f&&k.qq>0&&f.manzanas>0?(k.qq/f.manzanas).toFixed(1)+' qq/mz':'-'};
+  const catMap={};
+  S.gastos_campo.filter(g=>(fi==='all'||g.finca_id===fi)&&(ci==='all'||g.ciclo_id===ci)).forEach(g=>{catMap[g.categoria]=(catMap[g.categoria]||0)+g.monto});
+  catMap['Costo de trillado']=k.ct;
+  const catLabels=Object.keys(catMap),catVals=Object.values(catMap);
+  const catColors=['#1F7A4D','#52B788','#B7E4C7','#B5621B','#E9C46A','#264653','#5B21B6','#9CA3AF'];
+  const ventDeriv={};DERIVADOS.forEach(d=>{ventDeriv[d]=S.ventas.filter(v=>(fi==='all'||v.finca_id===fi)&&(ci==='all'||v.ciclo_id===ci)&&v.derivado===d).reduce((s,v)=>s+v.qq_vendidos*v.precio_qq,0)});
+  const cpqq=costoPorQQ(fi,ci);
+  document.getElementById('content').innerHTML=`
+    <div class="filters">
+      <label>Finca:</label><select onchange="setF('finca',this.value)">${fincaOpts(fi)}</select>
+      <label>Ciclo:</label><select onchange="setF('ciclo',this.value)">${cicloOpts(ci)}</select>
+    </div>
+    <div class="cards cards-4">
+      <div class="card g"><div class="lbl">Ingresos totales</div><div class="val">${C$(k.ing)}</div><div class="sub">${S.ventas.filter(v=>fi==='all'||v.finca_id===fi).length} ventas</div></div>
+      <div class="card r"><div class="lbl">Gastos totales</div><div class="val">${C$(k.gastos)}</div><div class="sub">Campo + Trillado</div></div>
+      <div class="card ${k.utilidad>=0?'g':'r'}"><div class="lbl">Utilidad neta</div><div class="val">${C$(k.utilidad)}</div><div class="sub">${Math.round(k.margen)}% margen</div></div>
+      <div class="card a"><div class="lbl">Produccion</div><div class="val">${fmtQQ(k.qq)}</div><div class="sub">${fi!=='all'?qqMz():'varias fincas'}</div></div>
+    </div>
+    <div class="stitle">Costo de produccion por quintal</div>
+    <div class="cards cards-4">
+      <div class="card b"><div class="lbl">Costo / QQ seco</div><div class="val" style="font-size:15px">${cpqq.costoQQseco>0?C$(cpqq.costoQQseco):'--'}</div><div class="sub">Gastos totales / QQ secos</div></div>
+      <div class="card b"><div class="lbl">Costo / QQ arroz entero</div><div class="val" style="font-size:15px">${cpqq.costoQQae>0?C$(cpqq.costoQQae):'--'}</div><div class="sub">Gastos totales / QQ AE</div></div>
+      <div class="card ${cpqq.promVenta>0?'g':''}"><div class="lbl">Precio prom. venta / QQ</div><div class="val" style="font-size:15px">${cpqq.promVenta>0?C$(cpqq.promVenta):'--'}</div><div class="sub">Precio promedio todos los derivados</div></div>
+      <div class="card ${cpqq.margenQQ>=0?'g':'r'}"><div class="lbl">Margen / QQ vendido</div><div class="val" style="font-size:15px">${cpqq.margenQQ!==0?C$(cpqq.margenQQ):'--'}</div><div class="sub">${cpqq.costoQQseco>0&&cpqq.promVenta>0?((cpqq.margenQQ/cpqq.promVenta)*100).toFixed(1)+'% del precio':'Sin ventas'}</div></div>
+    </div>
+    <div class="stitle">Derivados producidos</div>
+    <div class="deriv-grid">${DERIVADOS.map(d=>`<div class="deriv-card" style="border-top:3px solid ${DCOLORS[d]}"><div class="dname">${DNAMES[d]}</div><div class="dqq" style="color:${DCOLORS[d]}">${deriv[d].toFixed(1)}</div><div class="dprice">qq producidos</div><div class="dprice" style="color:${DCOLORS[d]};margin-top:3px">${C$(ventDeriv[d])}</div></div>`).join('')}</div>
+    <div class="charts-grid">
+      <div class="cbox"><h3>Distribucion de costos</h3>${catLabels.length?`<div style="height:160px"><canvas id="ch1"></canvas></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${catLabels.map((l,i)=>`<span style="font-size:10px;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:2px;background:${catColors[i]||'#ccc'}"></span>${l}</span>`).join('')}</div>`:'<div class="empty">Sin datos</div>'}</div>
+      <div class="cbox"><h3>Ingresos por derivado</h3>${Object.values(ventDeriv).some(v=>v>0)?`<div style="height:160px"><canvas id="ch2"></canvas></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${DERIVADOS.map(d=>`<span style="font-size:10px;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:2px;background:${DCOLORS[d]}"></span>${DNAMES[d]}</span>`).join('')}</div>`:'<div class="empty">Sin ventas</div>'}</div>
+    </div>
+    <div class="stitle">P&L por finca</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Finca</th><th>Manzanas</th><th>QQ cosechados</th><th>QQ/Mz</th><th>Gasto campo</th><th>Costo trillado</th><th>Total gastos</th><th>Ingresos</th><th>Utilidad</th><th>Margen</th></tr></thead>
+    <tbody>${S.fincas.map(f=>{const k2=kpis(f.id,'all');const qm=f.manzanas>0&&k2.qq>0?(k2.qq/f.manzanas).toFixed(1):'--';return`<tr><td><strong>${f.nombre}</strong></td><td class="num">${f.manzanas} mz</td><td class="num">${k2.qq.toFixed(1)}</td><td class="num">${qm}</td><td class="num" style="color:var(--red)">${C$(k2.gc)}</td><td class="num" style="color:var(--amber)">${C$(k2.ct)}</td><td class="num" style="color:var(--red)">${C$(k2.gastos)}</td><td class="num" style="color:var(--green)">${C$(k2.ing)}</td><td><span class="bdg ${k2.utilidad>=0?'bdg-p':'bdg-n'}">${C$(k2.utilidad)}</span></td><td class="num">${Math.round(k2.margen)}%</td></tr>`}).join('')}</tbody></table></div>`;
+  setTimeout(()=>{
+    if(catLabels.length)mkDoughnut('ch1',catLabels,catVals,catColors);
+    if(Object.values(ventDeriv).some(v=>v>0))mkDoughnut('ch2',DERIVADOS.map(d=>DNAMES[d]),DERIVADOS.map(d=>ventDeriv[d]),DERIVADOS.map(d=>DCOLORS[d]));
+  },80);
+}
+
+function rCampo(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const gastos=S.gastos_campo.filter(g=>(fi==='all'||g.finca_id===fi)&&(ci==='all'||g.ciclo_id===ci)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const catMap={};gastos.forEach(g=>{catMap[g.categoria]=(catMap[g.categoria]||0)+g.monto});
+  const total=gastos.reduce((s,g)=>s+g.monto,0);
+  document.getElementById('content').innerHTML=`
+    <div class="filters"><label>Finca:</label><select onchange="setF('finca',this.value)">${fincaOpts(fi)}</select><label>Ciclo:</label><select onchange="setF('ciclo',this.value)">${cicloOpts(ci)}</select><button class="btn btn-g" onclick="openModal('gasto_campo')">+ Gasto campo</button></div>
+    <div class="cards cards-3"><div class="card r"><div class="lbl">Total gastos campo</div><div class="val">${C$(total)}</div></div><div class="card a"><div class="lbl">Mayor categoria</div><div class="val" style="font-size:13px">${Object.keys(catMap).sort((a,b)=>catMap[b]-catMap[a])[0]||'--'}</div></div><div class="card b"><div class="lbl">Registros</div><div class="val">${gastos.length}</div></div></div>
+    ${Object.keys(catMap).length?`<div class="charts-grid"><div class="cbox"><h3>Gastos por categoria</h3><div style="height:150px"><canvas id="chc1"></canvas></div></div><div class="cbox"><h3>Detalle</h3>${Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([cat,v])=>`<div class="pbar-wrap" style="margin-bottom:6px"><div style="width:90px;font-size:11px;color:var(--gray2)">${cat}</div><div class="pbar" style="width:${Math.round(v/total*80)}px;background:var(--green)"></div><div style="font-size:11px;font-family:var(--mono);margin-left:4px">${C$(v)}</div></div>`).join('')}</div></div>`:''}
+    <div class="stitle">Movimientos de campo</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Finca</th><th>Ciclo</th><th>Categoria</th><th>Descripcion</th><th>Monto</th><th></th></tr></thead>
+    <tbody>${gastos.length?gastos.map(g=>`<tr><td class="num">${g.fecha}</td><td><span class="tag tf">${gF(g.finca_id).nombre}</span></td><td style="font-size:11px;color:var(--gray2)">${g.ciclo_id?gC(g.ciclo_id).nombre:'--'}</td><td><span class="tag tg">${g.categoria}</span></td><td>${g.descripcion}</td><td class="num" style="color:var(--red)">${C$(g.monto)}</td><td><button onclick="delItem('gastos_campo','${g.id}')" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:16px">x</button></td></tr>`).join(''):`<tr><td colspan="7" class="empty">Sin registros</td></tr>`}</tbody></table></div>`;
+  setTimeout(()=>{if(Object.keys(catMap).length)mkDoughnut('chc1',Object.keys(catMap),Object.values(catMap),['#1F7A4D','#52B788','#B7E4C7','#B5621B','#E9C46A','#264653','#5B21B6','#9CA3AF'])},80);
+}
+
+function rCosecha(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const cos=S.cosechas.filter(c=>(fi==='all'||c.finca_id===fi)&&(ci==='all'||c.ciclo_id===ci));
+  const totalQQ=cos.reduce((s,c)=>s+c.qq_cosechados,0);
+  const promHum=cos.length?cos.reduce((s,c)=>s+c.humedad,0)/cos.length:0;
+  // QQ por manzana: total QQ / total manzanas of filtered fincas
+  const mzTotal=(fi==='all'?S.fincas.reduce((s,f)=>s+f.manzanas,0):S.fincas.filter(f=>f.id===fi).reduce((s,f)=>s+f.manzanas,0));
+  const qqPorMz=mzTotal>0&&totalQQ>0?(totalQQ/mzTotal).toFixed(1)+' qq/mz':'--';
+  document.getElementById('content').innerHTML=`
+    <div class="filters"><label>Finca:</label><select onchange="setF('finca',this.value)">${fincaOpts(fi)}</select><label>Ciclo:</label><select onchange="setF('ciclo',this.value)">${cicloOpts(ci)}</select><button class="btn btn-g" onclick="openModal('cosecha')">+ Registrar cosecha</button></div>
+    <div class="info-box">La humedad al corte determina la merma. A mayor humedad, mas peso se pierde al secar. El punto optimo de secado es entre 12 y 12.5 grados.</div>
+    <div class="cards cards-4"><div class="card g"><div class="lbl">Total cosechado</div><div class="val">${fmtQQ(totalQQ)}</div></div><div class="card t"><div class="lbl">Rendimiento promedio</div><div class="val" style="font-size:14px">${qqPorMz}</div><div class="sub">qq granza / manzana</div></div><div class="card b"><div class="lbl">Lotes</div><div class="val">${cos.length}</div></div><div class="card a"><div class="lbl">Humedad promedio</div><div class="val">${promHum.toFixed(1)}°</div></div></div>
+    <div class="stitle">Registros de cosecha</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Finca</th><th>Ciclo</th><th>QQ cosechados</th><th>Humedad corte</th><th>QQ secos est. (12.5°)</th><th>Merma est.</th><th>Notas</th><th></th></tr></thead>
+    <tbody>${cos.length?cos.map(c=>{const qs=calcQQseco(c.qq_cosechados,c.humedad,12.5);const merma=c.qq_cosechados-qs;return`<tr><td class="num">${c.fecha}</td><td><span class="tag tf">${gF(c.finca_id).nombre}</span></td><td style="font-size:11px;color:var(--gray2)">${c.ciclo_id?gC(c.ciclo_id).nombre:'--'}</td><td class="num" style="color:var(--green);font-weight:600">${c.qq_cosechados} qq</td><td class="num">${c.humedad}°</td><td class="num" style="color:var(--teal)">${qs.toFixed(1)} qq</td><td class="num" style="color:var(--red)">-${merma.toFixed(1)} qq</td><td style="font-size:11px;color:#999">${c.notas||'--'}</td><td><button onclick="delItem('cosechas','${c.id}')" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:16px">x</button></td></tr>`}).join(''):`<tr><td colspan="9" class="empty">Sin cosechas</td></tr>`}</tbody></table></div>`;
+}
+
+function rBascula(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const basculas=(S.basculas||[]).filter(b=>(fi==="all"||b.finca_id===fi)&&(ci==="all"||b.ciclo_id===ci)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const totNeto=basculas.reduce((s,b)=>s+b.qq_neto,0);
+  document.getElementById("content").innerHTML=`
+    <div class="filters"><label>Finca:</label><select onchange="setF('finca',this.value)">${fincaOpts(fi)}</select><label>Ciclo:</label><select onchange="setF('ciclo',this.value)">${cicloOpts(ci)}</select><button class="btn btn-g" onclick="openModal('bascula')">+ Registrar ticket</button></div>
+    <div class="info-box">Registra aqui cada ticket de bascula. El QQ neto de granza es el que entra al proceso de secado y trillado.</div>
+    <div class="cards cards-3"><div class="card b"><div class="lbl">Total QQ neto granza</div><div class="val">${fmtQQ(totNeto)}</div><div class="sub">${basculas.length} tickets</div></div></div>
+    <div class="stitle">Tickets de bascula</div>
+    <div class="tbl-wrap"><table><thead><tr><th>No. Ticket</th><th>Fecha</th><th>Hora</th><th>Finca</th><th>Productor</th><th>Placa</th><th>Conductor</th><th>Neto (qq)</th><th>Beneficio</th><th></th></tr></thead><tbody>${basculas.length?basculas.map(b=>`<tr><td><span class="tag tk">#${b.no_ticket}</span></td><td class="num">${b.fecha}</td><td class="num">${b.hora||"--"}</td><td><span class="tag tf">${gF(b.finca_id).nombre}</span></td><td style="font-size:11px">${b.nombre_productor||"--"}</td><td class="num" style="font-size:11px">${b.placa||"--"}</td><td style="font-size:11px">${b.conductor||"--"}</td><td class="num"><td class="num" style="color:var(--green);font-weight:600">${b.qq_neto.toFixed(2)}</td><td style="font-size:10px;color:#999">${b.beneficio||"--"}</td><td style="white-space:nowrap"><button onclick="editBascula('${b.id}')" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:11px;margin-right:6px">editar</button><button onclick="delItem('basculas','${b.id}')" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:16px">x</button></td></tr>`).join(""):`<tr><td colspan="12" class="empty">Sin tickets registrados</td></tr>`}</tbody></table></div>
+  `;
+}
+
+function rTrillo(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const tab=S.trilloTab||'secado';
+  const nS=(S.secados||[]).filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).length;
+  const nE=(S.embodegados||[]).filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).length;
+  const nT=S.trillos.filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).length;
+  const tabs=[['secado','1. Secado',nS],['embodegado','2. Embodegado',nE],['trillado','3. Trillado',nT]];
+  document.getElementById('content').innerHTML=`
+    <div class="filters"><label>Finca:</label><select onchange="setF('finca',this.value)">${fincaOpts(fi)}</select><label>Ciclo:</label><select onchange="setF('ciclo',this.value)">${cicloOpts(ci)}</select></div>
+    <div class="trillo-tabs">${tabs.map(([k,lbl,n])=>`<button class="trillo-tab ${tab===k?'active':''}" onclick="setTrilloTab('${k}')">${lbl}<span class="tab-badge">${n}</span></button>`).join('')}</div>
+    <div id="proceso-content"></div>`;
+  renderProcesoTab(tab);
+}
+function setTrilloTab(tab){S.trilloTab=tab;document.querySelectorAll('.trillo-tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.trillo-tab').forEach(b=>{if(b.onclick&&b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+tab+"'"))b.classList.add('active');});renderProcesoTab(tab);}
+function renderProcesoTab(tab){if(tab==='secado')rSecado();else if(tab==='embodegado')rEmbodegado();else rTrillado();}
+function delItemTabla(arr,id,tab){if(!confirm('Eliminar este registro?'))return;const tbls={secados:'secados',embodegados:'embodegados',trillos:'trillos'};const tbl=tbls[arr];if(tbl)sbDelete(tbl,id).catch(e=>alert('Error: '+e.message));S[arr]=(S[arr]||[]).filter(x=>x.id!==id);renderProcesoTab(tab);}
+
+// helpers
+const getTicket=id=>S.basculas.find(x=>x.id===id);
+const ticketLabel=id=>{const b=getTicket(id);return b?`#${b.no_ticket} — ${gF(b.finca_id).nombre} (${(b.qq_neto||0).toFixed(1)} qq granza)`:id||'--';};
+const estadoPill=(e,map)=>{const cfg={en_proceso:{lbl:'En proceso',cls:'en_proceso'},preseco:{lbl:'Pre-seco',cls:'preseco'},seco:{lbl:'Seco',cls:'seco'},parcial:{lbl:'Parcial',cls:'parcial'},completado:{lbl:'Completado',cls:'completado'}};const c=cfg[e]||{lbl:e,cls:'en_proceso'};return`<span class="status-pill st-${c.cls}">${c.lbl}</span>`;};
+
+// ══════════════════════════════════════════════
+// SECADO
+// ══════════════════════════════════════════════
+function rSecado(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const list=(S.secados||[]).filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const totSeco=list.reduce((s,x)=>s+(x.qq_seco||0),0);
+  const enProceso=list.filter(x=>x.estado==='en_proceso').length;
+  const preseco=list.filter(x=>x.estado==='preseco').length;
+  const completados=list.filter(x=>x.estado==='seco').length;
+  document.getElementById('proceso-content').innerHTML=`
+    <div class="cards cards-4">
+      <div class="card t"><div class="lbl">QQ secos total</div><div class="val">${fmtQQ(totSeco)}</div></div>
+      <div class="card a"><div class="lbl">En proceso</div><div class="val">${enProceso}</div></div>
+      <div class="card r"><div class="lbl">Pre-secos</div><div class="val">${preseco}</div></div>
+      <div class="card g"><div class="lbl">Completados</div><div class="val">${completados}</div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="stitle" style="margin:0;border:none">Registros de secado por viaje</div>
+      <button class="btn btn-g" onclick="openSecadoModal()">+ Registrar secado</button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr>
+      <th>Ticket / Viaje</th><th>Fecha</th><th>Metodo</th><th>Ubicacion</th>
+      <th>Hum. ent.</th><th>Hum. obj.</th><th>QQ granza</th><th>QQ secos</th><th>Merma</th>
+      <th>Desc.</th><th>C$ secado</th><th>Estado</th><th></th>
+    </tr></thead><tbody>${list.length?list.map(x=>{
+      const b=getTicket(x.bascula_id);
+      const qqNeto=b?b.qq_neto:0;
+      const merma=qqNeto-(x.qq_seco||0);
+      const descTotal=(x.precio_descargue||0);
+      const costoSec=x.metodo==='secadora'?(x.precio_secado||0)*(x.qq_seco||0):(x.precio_secado||0)*(x.qq_seco||0);
+      const ubic=x.metodo==='secadora'?('Silo '+(x.numero||'')): ('Patio '+(x.numero||'')+(x.tipo_patio==='preseco'?' (P/S)':''));
+      return`<tr>
+        <td><span class="tag tk" style="font-size:10px">${ticketLabel(x.bascula_id)}</span></td>
+        <td class="num">${x.fecha}</td>
+        <td><span class="tag ${x.metodo==='secadora'?'tt':'ta'}">${x.metodo==='secadora'?'Secadora':'Patio'}</span></td>
+        <td style="font-size:11px">${ubic}</td>
+        <td class="num">${x.humedad_entrada||0}°</td>
+        <td class="num">${x.humedad_objetivo||12.5}°</td>
+        <td class="num">${qqNeto.toFixed(1)} qq</td>
+        <td class="num" style="color:var(--teal);font-weight:600">${(x.qq_seco||0).toFixed(1)} qq</td>
+        <td class="num" style="color:var(--red)">-${merma.toFixed(1)} qq</td>
+        <td class="num">${C$(descTotal)}</td>
+        <td class="num">${C$(costoSec)}</td>
+        <td>${estadoPill(x.estado)}</td>
+        <td style="white-space:nowrap">
+          <button onclick="openSecadoModal('${x.id}')" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:11px;margin-right:4px">editar</button>
+          <button onclick="delItemTabla('secados','${x.id}','secado')" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:16px">x</button>
+        </td>
+      </tr>`;
+    }).join(''):`<tr><td colspan="13" class="empty">Sin registros de secado. Comienza registrando un viaje.</td></tr>`}</tbody></table></div>`;
+}
+
+function openSecadoModal(editId){
+  const ex=editId?((S.secados||[]).find(x=>x.id===editId)||{}):{};
+  const today=new Date().toISOString().slice(0,10);
+  const isEdit=!!editId;
+  const ticketsOpts=S.basculas.map(b=>`<option value="${b.id}" ${ex.bascula_id===b.id?'selected':''}>${ticketLabel(b.id)} — ${b.fecha}</option>`).join('');
+  const metodo=ex.metodo||'patio';
+  document.getElementById('mbody').innerHTML=`
+    <div class="mh"><h2>${isEdit?'Editar secado':'Registrar secado'}</h2><button class="mc" onclick="CM()">x</button></div>
+    <div class="viaje-select-box"><label>Ticket de bascula (viaje)</label>
+      <select id="m-bascula" onchange="onTicketChange(this,'sec')">
+        <option value="">-- Seleccionar ticket --</option>${ticketsOpts}
+      </select>
+    </div>
+    <div class="stitle blue" style="margin-top:0">Metodo y ubicacion</div>
+    <div class="fg">
+      <div class="fi"><label>Metodo</label>
+        <select id="m-metodo" onchange="toggleSecMetodo()">
+          <option value="patio" ${metodo==='patio'?'selected':''}>Patio</option>
+          <option value="secadora" ${metodo==='secadora'?'selected':''}>Secadora</option>
+        </select>
+      </div>
+      <div class="fi"><label>Fecha</label><input type="date" id="m-fecha" value="${ex.fecha||today}"></div>
+    </div>
+    <div id="sec-patio" style="display:${metodo==='patio'?'block':'none'}">
+      <div class="fg" style="margin-top:8px">
+        <div class="fi"><label># de Patio</label><input type="text" id="m-numero-patio" placeholder="Ej: 3" value="${metodo==='patio'?ex.numero||'':''}"></div>
+        <div class="fi"><label>Tipo de secado</label>
+          <select id="m-tipo-patio">
+            <option value="normal" ${(ex.tipo_patio||'normal')==='normal'?'selected':''}>Normal (completo en el dia)</option>
+            <option value="preseco" ${ex.tipo_patio==='preseco'?'selected':''}>Pre-seco (continua al dia siguiente)</option>
+          </select>
+        </div>
+        <div class="fi"><label>Precio descargue en patio (C$)</label><input type="number" id="m-desc-patio" min="0" value="${metodo==='patio'?(ex.precio_descargue||0):0}"></div>
+        <div class="fi"><label>Precio secado en patio (C$/qq)</label><input type="number" id="m-precio-sec-patio" min="0" step="0.01" value="${metodo==='patio'?(ex.precio_secado||0):0}"></div>
+      </div>
+    </div>
+    <div id="sec-silo" style="display:${metodo==='secadora'?'block':'none'}">
+      <div class="fg" style="margin-top:8px">
+        <div class="fi"><label># de Silo</label><input type="text" id="m-numero-silo" placeholder="Ej: 2" value="${metodo==='secadora'?ex.numero||'':''}"></div>
+        <div class="fi"><label>Precio descargue en silo (C$)</label><input type="number" id="m-desc-silo" min="0" value="${metodo==='secadora'?(ex.precio_descargue||0):0}"></div>
+        <div class="fi"><label>Precio secado en silo (C$/qq)</label><input type="number" id="m-precio-sec-silo" min="0" step="0.01" value="${metodo==='secadora'?(ex.precio_secado||0):0}"></div>
+        <div class="fi"><label>Viene de pre-seco en patio</label>
+          <select id="m-de-preseco">
+            <option value="no" ${!ex.de_preseco?'selected':''}>No</option>
+            <option value="si" ${ex.de_preseco?'selected':''}>Si (acumular costos al mismo viaje)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="stitle blue">Humedad y merma</div>
+    <div class="fg">
+      <div class="fi"><label>Humedad de entrada (°)</label><input type="number" id="m-hent" min="0" max="40" step="0.1" value="${ex.humedad_entrada||22}" oninput="calcSecMerma()"></div>
+      <div class="fi"><label>Humedad objetivo (°)</label><input type="number" id="m-hobj" min="0" max="20" step="0.1" value="${ex.humedad_objetivo||12.5}" oninput="calcSecMerma()"></div>
+      <div class="fi full"><div id="sec-merma-preview" class="calc" style="display:none"></div></div>
+    </div>
+    <div class="stitle blue">Estado del secado</div>
+    <div class="fg">
+      <div class="fi"><label>Estado al final del dia</label>
+        <select id="m-estado">
+          <option value="en_proceso" ${(ex.estado||'en_proceso')==='en_proceso'?'selected':''}>En proceso (actualizar despues)</option>
+          <option value="seco" ${ex.estado==='seco'?'selected':''}>Seco (completo)</option>
+          <option value="preseco" ${ex.estado==='preseco'?'selected':''}>Pre-seco (continua manana)</option>
+        </select>
+      </div>
+      <div class="fi"><label>Notas</label><input type="text" id="m-notas" value="${ex.notas||''}"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="CM()">Cancelar</button>
+      <button class="btn btn-g" onclick="${isEdit?`updateSecado('${editId}')`:'saveSecado()'}">${isEdit?'Guardar cambios':'Registrar secado'}</button>
+    </div>`;
+  document.getElementById('moverlay').style.display='flex';
+  calcSecMerma();
+}
+
+function toggleSecMetodo(){
+  const m=document.getElementById('m-metodo').value;
+  document.getElementById('sec-patio').style.display=m==='patio'?'block':'none';
+  document.getElementById('sec-silo').style.display=m==='secadora'?'block':'none';
+  calcSecMerma();
+}
+
+function onTicketChange(sel,ctx){
+  const b=S.basculas.find(x=>x.id===sel.value);
+  if(!b)return;
+  if(ctx==='sec')calcSecMerma();
+  if(ctx==='emb'){
+    // prefill qq from linked secado
+    const sec=(S.secados||[]).find(x=>x.bascula_id===sel.value&&x.estado==='seco');
+    if(sec){
+      const qqEl=document.getElementById('m-qq-emb');
+      if(qqEl&&!qqEl.value)qqEl.value=sec.qq_seco.toFixed(2);
+    }
+  }
+}
+
+function calcSecMerma(){
+  const basId=document.getElementById('m-bascula')?.value;
+  const b=basId?S.basculas.find(x=>x.id===basId):null;
+  const qqNeto=b?b.qq_neto:0;
+  const hent=parseFloat(document.getElementById('m-hent')?.value)||22;
+  const hobj=parseFloat(document.getElementById('m-hobj')?.value)||12.5;
+  const el=document.getElementById('sec-merma-preview');
+  if(!el)return;
+  if(qqNeto>0&&hent>hobj){
+    const seco=calcQQseco(qqNeto,hent,hobj);
+    const merma=qqNeto-seco;
+    el.textContent=`QQ neto granza: ${qqNeto.toFixed(1)} qq → QQ secos estimados: ${seco.toFixed(1)} qq | Merma: ${merma.toFixed(1)} qq (${((merma/qqNeto)*100).toFixed(1)}%)`;
+    el.style.display='block';
+    // store for save
+    el.dataset.qqseco=seco.toFixed(2);
+  }else{el.style.display='none';}
+}
+
+function getSecadoRec(){
+  const basId=document.getElementById('m-bascula')?.value;
+  if(!basId){alert('Selecciona un ticket de bascula');return null;}
+  const b=S.basculas.find(x=>x.id===basId);
+  if(!b){alert('Ticket no encontrado');return null;}
+  const metodo=document.getElementById('m-metodo').value;
+  const hent=parseFloat(document.getElementById('m-hent').value)||22;
+  const hobj=parseFloat(document.getElementById('m-hobj').value)||12.5;
+  const qqSeco=parseFloat(document.getElementById('sec-merma-preview')?.dataset.qqseco||calcQQseco(b.qq_neto,hent,hobj).toFixed(2));
+  const numero=metodo==='patio'?document.getElementById('m-numero-patio')?.value:document.getElementById('m-numero-silo')?.value;
+  const precio_descargue=metodo==='patio'?parseFloat(document.getElementById('m-desc-patio')?.value||0):parseFloat(document.getElementById('m-desc-silo')?.value||0);
+  const precio_secado=metodo==='patio'?parseFloat(document.getElementById('m-precio-sec-patio')?.value||0):parseFloat(document.getElementById('m-precio-sec-silo')?.value||0);
+  const tipo_patio=metodo==='patio'?document.getElementById('m-tipo-patio')?.value:'';
+  const de_preseco=metodo==='secadora'&&document.getElementById('m-de-preseco')?.value==='si';
+  return{bascula_id:basId,finca_id:b.finca_id,ciclo_id:b.ciclo_id,fecha:document.getElementById('m-fecha').value,metodo,numero:numero||'',tipo_patio,precio_descargue,precio_secado,de_preseco,humedad_entrada:hent,humedad_objetivo:hobj,qq_seco:parseFloat(qqSeco),estado:document.getElementById('m-estado').value,notas:document.getElementById('m-notas').value||''};
+}
+
+async function saveSecado(){
+  const rec=getSecadoRec();if(!rec)return;
+  try{const[saved]=await sbPost('secados',rec);(S.secados=S.secados||[]).unshift(saved);CM();rSecado();}
+  catch(e){alert('Error: '+e.message);}
+}
+async function updateSecado(id){
+  const rec=getSecadoRec();if(!rec)return;
+  try{await sbPatch('secados',id,rec);const idx=(S.secados||[]).findIndex(x=>x.id===id);if(idx>=0)Object.assign(S.secados[idx],rec);CM();rSecado();}
+  catch(e){alert('Error: '+e.message);}
+}
+
+// ══════════════════════════════════════════════
+// EMBODEGADO
+// ══════════════════════════════════════════════
+function rEmbodegado(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const list=(S.embodegados||[]).filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const totQQ=list.reduce((s,x)=>s+(x.qq_embodegados||0),0);
+  const totSacos=list.reduce((s,x)=>s+(x.sacos||0),0);
+  const totCosto=list.reduce((s,x)=>s+(x.sacos||0)*(x.precio_saco||0),0);
+  document.getElementById('proceso-content').innerHTML=`
+    <div class="cards cards-4">
+      <div class="card b"><div class="lbl">QQ embodegados</div><div class="val">${fmtQQ(totQQ)}</div></div>
+      <div class="card t"><div class="lbl">Total sacos</div><div class="val">${totSacos.toLocaleString()}</div></div>
+      <div class="card a"><div class="lbl">Costo embodegado</div><div class="val">${C$(totCosto)}</div></div>
+      <div class="card g"><div class="lbl">Viajes embodegados</div><div class="val">${list.length}</div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="stitle" style="margin:0;border:none">Registros de embodegado</div>
+      <button class="btn btn-g" onclick="openEmbodegadoModal()">+ Registrar embodegado</button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr>
+      <th>Ticket / Viaje</th><th>Fecha</th><th>QQ secos</th><th>QQ embodegados</th><th>Sacos</th><th>Precio/saco</th><th>Costo total</th><th>Bodega / Posicion</th><th>Notas</th><th></th>
+    </tr></thead><tbody>${list.length?list.map(x=>{
+      const sec=(S.secados||[]).find(s=>s.bascula_id===x.bascula_id);
+      return`<tr>
+        <td><span class="tag tk" style="font-size:10px">${ticketLabel(x.bascula_id)}</span></td>
+        <td class="num">${x.fecha}</td>
+        <td class="num" style="color:var(--teal)">${sec?(sec.qq_seco||0).toFixed(1)+' qq':'--'}</td>
+        <td class="num" style="color:var(--blue);font-weight:600">${(x.qq_embodegados||0).toFixed(1)} qq</td>
+        <td class="num">${x.sacos||0} sacos</td>
+        <td class="num">${C$(x.precio_saco||0)}</td>
+        <td class="num" style="color:var(--amber)">${C$((x.sacos||0)*(x.precio_saco||0))}</td>
+        <td style="font-size:11px">${x.bodega||'--'}</td>
+        <td style="font-size:11px;color:#999">${x.notas||'--'}</td>
+        <td style="white-space:nowrap">
+          <button onclick="openEmbodegadoModal('${x.id}')" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:11px;margin-right:4px">editar</button>
+          <button onclick="delItemTabla('embodegados','${x.id}','embodegado')" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:16px">x</button>
+        </td>
+      </tr>`;
+    }).join(''):`<tr><td colspan="10" class="empty">Sin registros de embodegado.</td></tr>`}</tbody></table></div>`;
+}
+
+function openEmbodegadoModal(editId){
+  const ex=editId?((S.embodegados||[]).find(x=>x.id===editId)||{}):{};
+  const today=new Date().toISOString().slice(0,10);
+  const isEdit=!!editId;
+  // Pre-fill qq from secado if new
+  const secadosListos=(S.secados||[]).filter(x=>x.estado==='seco');
+  const ticketsOpts=S.basculas.map(b=>{
+    const sec=secadosListos.find(s=>s.bascula_id===b.id);
+    const label=`${ticketLabel(b.id)} — ${b.fecha}${sec?' ✅ Seco ('+sec.qq_seco.toFixed(1)+' qq)':' ⏳ Sin secado'}`;
+    return`<option value="${b.id}" ${ex.bascula_id===b.id?'selected':''}>${label}</option>`;
+  }).join('');
+  document.getElementById('mbody').innerHTML=`
+    <div class="mh"><h2>${isEdit?'Editar embodegado':'Registrar embodegado'}</h2><button class="mc" onclick="CM()">x</button></div>
+    <div class="viaje-select-box"><label>Ticket de bascula (viaje)</label>
+      <select id="m-bascula" onchange="onTicketChange(this,'emb')">
+        <option value="">-- Seleccionar ticket --</option>${ticketsOpts}
+      </select>
+    </div>
+    <div class="stitle blue" style="margin-top:0">Quintales y sacos</div>
+    <div class="fg">
+      <div class="fi"><label>QQ embodegados</label><input type="number" id="m-qq-emb" min="0" step="0.01" value="${ex.qq_embodegados||''}" placeholder="Se pre-llena del secado"></div>
+      <div class="fi"><label>Fecha</label><input type="date" id="m-fecha" value="${ex.fecha||today}"></div>
+      <div class="fi"><label>Cantidad de sacos</label><input type="number" id="m-sacos" min="0" value="${ex.sacos||''}"></div>
+      <div class="fi"><label>Precio por saco (C$)</label><input type="number" id="m-precio-saco" min="0" step="0.01" value="${ex.precio_saco||''}"></div>
+    </div>
+    <div class="stitle blue">Ubicacion en bodega</div>
+    <div class="fg">
+      <div class="fi"><label>Bodega / Posicion</label><input type="text" id="m-bodega" placeholder="Ej: Bodega 2, Fila 3" value="${ex.bodega||''}"></div>
+      <div class="fi"><label>Notas</label><input type="text" id="m-notas" value="${ex.notas||''}"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="CM()">Cancelar</button>
+      <button class="btn btn-g" onclick="${isEdit?`updateEmbodegado('${editId}')`:'saveEmbodegado()'}">${isEdit?'Guardar cambios':'Registrar embodegado'}</button>
+    </div>`;
+  document.getElementById('moverlay').style.display='flex';
+  // Auto-fill if editing
+  if(isEdit&&ex.bascula_id){const fakeEvt={value:ex.bascula_id};onTicketChange(fakeEvt,'emb');}
+}
+
+function getEmbodegadoRec(){
+  const basId=document.getElementById('m-bascula')?.value;
+  if(!basId){alert('Selecciona un ticket');return null;}
+  const b=S.basculas.find(x=>x.id===basId);
+  if(!b)return null;
+  const qqEmb=parseFloat(document.getElementById('m-qq-emb')?.value||0);
+  const sacos=parseInt(document.getElementById('m-sacos')?.value||0);
+  if(!qqEmb){alert('Ingresa los QQ embodegados');return null;}
+  if(!sacos){alert('Ingresa la cantidad de sacos');return null;}
+  return{bascula_id:basId,finca_id:b.finca_id,ciclo_id:b.ciclo_id,fecha:document.getElementById('m-fecha').value,qq_embodegados:qqEmb,sacos,precio_saco:parseFloat(document.getElementById('m-precio-saco')?.value||0),bodega:document.getElementById('m-bodega')?.value||'',notas:document.getElementById('m-notas')?.value||''};
+}
+async function saveEmbodegado(){
+  const rec=getEmbodegadoRec();if(!rec)return;
+  try{const[saved]=await sbPost('embodegados',rec);(S.embodegados=S.embodegados||[]).unshift(saved);CM();rEmbodegado();}
+  catch(e){alert('Error: '+e.message);}
+}
+async function updateEmbodegado(id){
+  const rec=getEmbodegadoRec();if(!rec)return;
+  try{await sbPatch('embodegados',id,rec);const idx=(S.embodegados||[]).findIndex(x=>x.id===id);if(idx>=0)Object.assign(S.embodegados[idx],rec);CM();rEmbodegado();}
+  catch(e){alert('Error: '+e.message);}
+}
+
+// ══════════════════════════════════════════════
+// TRILLADO
+// ══════════════════════════════════════════════
+function rTrillado(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const list=S.trillos.filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const derivTot=derivadosTotales(fi,ci);
+  const totSeco=list.reduce((s,t)=>s+(t.qq_seco||0),0);
+  const totCosto=list.reduce((s,t)=>s+costoTrillo(t),0);
+  document.getElementById('proceso-content').innerHTML=`
+    <div class="cards cards-4">
+      <div class="card p"><div class="lbl">Lotes trillados</div><div class="val">${list.length}</div></div>
+      <div class="card t"><div class="lbl">QQ secos trillados</div><div class="val">${fmtQQ(totSeco)}</div></div>
+      <div class="card g"><div class="lbl">Arroz entero</div><div class="val">${fmtQQ(derivTot.arroz_entero)}</div><div class="sub">Rendimiento AE: ${totSeco>0?((derivTot.arroz_entero/totSeco)*100).toFixed(1)+'%':'--'}</div></div>
+      <div class="card a"><div class="lbl">Costo trillado</div><div class="val">${C$(totCosto)}</div></div>
+    </div>
+    <div class="stitle">Derivados producidos</div>
+    <div class="deriv-grid">${DERIVADOS.map(d=>{const pct=totSeco>0?((derivTot[d]/totSeco)*100).toFixed(1):0;return`<div class="deriv-card" style="border-top:3px solid ${DCOLORS[d]}"><div class="dname">${DNAMES[d]}</div><div class="dqq" style="color:${DCOLORS[d]}">${derivTot[d].toFixed(1)}</div><div class="dprice">qq producidos</div><div class="dprice">${pct}% del seco</div></div>`;}).join('')}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="stitle" style="margin:0;border:none">Registros de trillado</div>
+      <button class="btn btn-g" onclick="openTrilladoModal()">+ Registrar trillado</button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr>
+      <th>Ticket / Viaje</th><th>Fecha</th><th>Origen pila</th><th>QQ secos</th><th>C$ llenado pila</th><th>C$ trillado/qq</th><th>Costo total</th><th>Estado</th><th>AE</th><th></th>
+    </tr></thead><tbody>${list.length?list.map(t=>{
+      const ct=costoTrillo(t);
+      const tt=Object.values(t.tarifas||{}).reduce((s,v)=>s+(v||0),0);
+      const estadoT=t.estado_trillo||'completado';
+      return`<tr>
+        <td><span class="tag tk" style="font-size:10px">${ticketLabel(t.bascula_id)}</span></td>
+        <td class="num">${t.fecha}</td>
+        <td><span class="tag ${t.origen_pila==='bolquete'?'tt':'ta'}">${t.origen_pila==='bolquete'?'Silo/Bolquete':'Bodega/Saco'}</span></td>
+        <td class="num" style="color:var(--teal)">${(t.qq_seco||0).toFixed(1)} qq</td>
+        <td class="num">${t.origen_pila==='bolquete'?'N/A':C$(t.costo_llenado_pila||0)}</td>
+        <td class="num">${C$(t.tarifas?.trillado||0)}/qq</td>
+        <td class="num" style="color:var(--amber)">${C$(ct)}</td>
+        <td><span class="status-pill st-${estadoT}">${estadoT==='completado'?'Completado':'Parcial'}</span></td>
+        <td class="num" style="color:var(--green);font-weight:600">${(t.derivados?.arroz_entero||0).toFixed(1)} qq</td>
+        <td style="white-space:nowrap">
+          <button onclick="openTrilladoModal('${t.id}')" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:11px;margin-right:4px">editar</button>
+          <button onclick="delItemTabla('trillos','${t.id}','trillado')" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:16px">x</button>
+        </td>
+      </tr>`;
+    }).join(''):`<tr><td colspan="10" class="empty">Sin registros de trillado.</td></tr>`}</tbody></table></div>`;
+}
+
+function openTrilladoModal(editId){
+  const ex=editId?(S.trillos.find(x=>x.id===editId)||{}):{};
+  const today=new Date().toISOString().slice(0,10);
+  const isEdit=!!editId;
+  const derivs=ex.derivados||{};
+  const tarifas=ex.tarifas||{};
+  const ticketsOpts=S.basculas.map(b=>{
+    const emb=(S.embodegados||[]).find(e=>e.bascula_id===b.id);
+    const label=`${ticketLabel(b.id)} — ${b.fecha}${emb?' ✅ Embodegado ('+emb.qq_embodegados.toFixed(1)+' qq)':' ⚠ Sin embodegar'}`;
+    return`<option value="${b.id}" ${ex.bascula_id===b.id?'selected':''}>${label}</option>`;
+  }).join('');
+  const origen=ex.origen_pila||'bodega_saco';
+  document.getElementById('mbody').innerHTML=`
+    <div class="mh"><h2>${isEdit?'Editar trillado':'Registrar trillado'}</h2><button class="mc" onclick="CM()">x</button></div>
+    <div class="viaje-select-box"><label>Ticket de bascula (viaje)</label>
+      <select id="m-bascula" onchange="onTrilladoTicketChange(this)">
+        <option value="">-- Seleccionar ticket --</option>${ticketsOpts}
+      </select>
+    </div>
+    <div class="stitle blue" style="margin-top:0">Datos del trillado</div>
+    <div class="fg">
+      <div class="fi"><label>Fecha</label><input type="date" id="m-fecha" value="${ex.fecha||today}"></div>
+      <div class="fi"><label>Origen del llenado de pila</label>
+        <select id="m-origen-pila" onchange="toggleOrigenPila()">
+          <option value="bodega_saco" ${origen==='bodega_saco'?'selected':''}>Desde bodega (por saco)</option>
+          <option value="bolquete" ${origen==='bolquete'?'selected':''}>Desde silo en bolquete (sin cobro)</option>
+        </select>
+      </div>
+    </div>
+    <div id="llenado-pila-field" style="display:${origen==='bodega_saco'?'block':'none'};margin-top:8px">
+      <div class="fg">
+        <div class="fi"><label>Precio llenado pila por saco (C$)</label><input type="number" id="m-llenado-pila" min="0" step="0.01" value="${ex.costo_llenado_pila||0}"></div>
+        <div class="fi"></div>
+      </div>
+    </div>
+    <div class="stitle blue">QQ secos a trillar</div>
+    <div class="fg">
+      <div class="fi"><label>QQ secos (del embodegado)</label><input type="number" id="m-qq-seco" min="0" step="0.01" value="${ex.qq_seco||''}" placeholder="Se pre-llena del embodegado"></div>
+      <div class="fi"><label>Estado</label>
+        <select id="m-estado-trillo">
+          <option value="completado" ${(ex.estado_trillo||'completado')==='completado'?'selected':''}>Completado</option>
+          <option value="parcial" ${ex.estado_trillo==='parcial'?'selected':''}>Parcial (continua otro dia)</option>
+        </select>
+      </div>
+    </div>
+    <div class="stitle amber">Precio de trillado (C$/qq seco)</div>
+    <div class="fg">
+      <div class="fi"><label>Trillado (C$/qq)</label><input type="number" id="m-t-trillado" min="0" step="0.01" value="${tarifas.trillado||0}"></div>
+      <div class="fi"><label>Beneficio / Trillo</label><input type="text" id="m-beneficio" value="${ex.beneficio||''}"></div>
+      <div class="fi"><label>Notas</label><input type="text" id="m-notas" value="${ex.notas||''}"></div>
+    </div>
+    <div class="stitle">Derivados obtenidos (qq)</div>
+    <div class="fg fg3">${DERIVADOS.map(d=>`<div class="fi"><label>${DNAMES[d]}</label><input type="number" id="m-${d}" min="0" step="0.01" value="${derivs[d]||0}"></div>`).join('')}</div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="CM()">Cancelar</button>
+      <button class="btn btn-g" onclick="${isEdit?`updateTrillado('${editId}')`:'saveTrillado2()'}">${isEdit?'Guardar cambios':'Registrar trillado'}</button>
+    </div>`;
+  document.getElementById('moverlay').style.display='flex';
+}
+
+function toggleOrigenPila(){
+  const v=document.getElementById('m-origen-pila')?.value;
+  const el=document.getElementById('llenado-pila-field');
+  if(el)el.style.display=v==='bodega_saco'?'block':'none';
+}
+
+function onTrilladoTicketChange(sel){
+  const emb=(S.embodegados||[]).find(x=>x.bascula_id===sel.value);
+  if(emb){
+    const el=document.getElementById('m-qq-seco');
+    if(el&&!el.value)el.value=emb.qq_embodegados.toFixed(2);
+  }
+}
+
+function getTrilladoRec(){
+  const basId=document.getElementById('m-bascula')?.value;
+  if(!basId){alert('Selecciona un ticket');return null;}
+  const b=S.basculas.find(x=>x.id===basId);if(!b)return null;
+  const qqSeco=parseFloat(document.getElementById('m-qq-seco')?.value||0);
+  if(!qqSeco){alert('Ingresa los QQ secos a trillar');return null;}
+  const derivs={};DERIVADOS.forEach(d=>{derivs[d]=parseFloat(document.getElementById('m-'+d)?.value||0);});
+  const origen=document.getElementById('m-origen-pila')?.value||'bodega_saco';
+  const tarifas={trillado:parseFloat(document.getElementById('m-t-trillado')?.value||0)};
+  return{bascula_id:basId,finca_id:b.finca_id,ciclo_id:b.ciclo_id,fecha:document.getElementById('m-fecha').value,origen_pila:origen,costo_llenado_pila:origen==='bodega_saco'?parseFloat(document.getElementById('m-llenado-pila')?.value||0):0,qq_seco:qqSeco,qq_neto_granza:b.qq_neto,estado_trillo:document.getElementById('m-estado-trillo')?.value||'completado',tarifas:JSON.stringify(tarifas),derivados:JSON.stringify(derivs),beneficio:document.getElementById('m-beneficio')?.value||'',notas:document.getElementById('m-notas')?.value||''};
+}
+
+async function saveTrillado2(){
+  const rec=getTrilladoRec();if(!rec)return;
+  try{
+    const[saved]=await sbPost('trillos',rec);
+    saved.tarifas=JSON.parse(saved.tarifas||'{}');
+    saved.derivados=JSON.parse(saved.derivados||'{}');
+    S.trillos.unshift(saved);CM();rTrillado();
+  }catch(e){alert('Error: '+e.message);}
+}
+async function updateTrillado(id){
+  const rec=getTrilladoRec();if(!rec)return;
+  try{
+    await sbPatch('trillos',id,rec);
+    const idx=S.trillos.findIndex(x=>x.id===id);
+    if(idx>=0){
+      const parsed={...rec,tarifas:JSON.parse(rec.tarifas||'{}'),derivados:JSON.parse(rec.derivados||'{}')};
+      Object.assign(S.trillos[idx],parsed);
+    }
+    CM();rTrillado();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+function rVentas(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const ventas=S.ventas.filter(v=>(fi==='all'||v.finca_id===fi)&&(ci==='all'||v.ciclo_id===ci)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const totalIng=ventas.reduce((s,v)=>s+v.qq_vendidos*v.precio_qq,0);
+  const derivVent={};DERIVADOS.forEach(d=>{derivVent[d]=ventas.filter(v=>v.derivado===d).reduce((s,v)=>s+v.qq_vendidos*v.precio_qq,0)});
+  const aeV=ventas.filter(v=>v.derivado==='arroz_entero');
+  const promAE=aeV.length?aeV.reduce((s,v)=>s+v.precio_qq,0)/aeV.length:0;
+  document.getElementById('content').innerHTML=`
+    <div class="filters"><label>Finca:</label><select onchange="setF('finca',this.value)">${fincaOpts(fi)}</select><label>Ciclo:</label><select onchange="setF('ciclo',this.value)">${cicloOpts(ci)}</select><button class="btn btn-g" onclick="openModal('venta')">+ Registrar venta</button></div>
+    <div class="cards cards-4"><div class="card g"><div class="lbl">Ingresos totales</div><div class="val">${C$(totalIng)}</div></div><div class="card b"><div class="lbl">QQ vendidos</div><div class="val">${fmtQQ(ventas.reduce((s,v)=>s+v.qq_vendidos,0))}</div></div><div class="card a"><div class="lbl">Ventas</div><div class="val">${ventas.length}</div></div><div class="card g"><div class="lbl">Precio prom. arroz</div><div class="val" style="font-size:14px">${C$(promAE)}/qq</div></div></div>
+    <div class="stitle">Ingresos por derivado</div>
+    <div class="deriv-grid">${DERIVADOS.map(d=>`<div class="deriv-card" style="border-top:3px solid ${DCOLORS[d]}"><div class="dname">${DNAMES[d]}</div><div class="dqq" style="color:${DCOLORS[d]};font-size:13px">${C$(derivVent[d])}</div><div class="dprice">${ventas.filter(v=>v.derivado===d).reduce((s,v)=>s+v.qq_vendidos,0).toFixed(1)} qq vendidos</div></div>`).join('')}</div>
+    <div class="stitle">Registro de ventas</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Finca</th><th>Derivado</th><th>QQ</th><th>Precio/qq</th><th>Total</th><th>Comprador</th><th></th></tr></thead>
+    <tbody>${ventas.length?ventas.map(v=>`<tr><td class="num">${v.fecha}</td><td><span class="tag tf">${gF(v.finca_id).nombre}</span></td><td><span class="tag" style="background:${DCOLORS[v.derivado]}22;color:${DCOLORS[v.derivado]}">${DNAMES[v.derivado]}</span></td><td class="num">${v.qq_vendidos}</td><td class="num">${C$(v.precio_qq)}</td><td class="num" style="font-weight:600;color:var(--green)">${C$(v.qq_vendidos*v.precio_qq)}</td><td style="font-size:11px">${v.comprador||'--'}</td><td><button onclick="delItem('ventas','${v.id}')" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:16px">x</button></td></tr>`).join(''):`<tr><td colspan="8" class="empty">Sin ventas</td></tr>`}</tbody></table></div>`;
+}
+
+function rFincas(){
+  document.getElementById('content').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="stitle" style="margin:0;border:none">Fincas y sectores</div><button class="btn btn-g" onclick="openModal('finca')">+ Nueva finca</button></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">${S.fincas.map(f=>{const k2=kpis(f.id,'all');return`<div class="ciclo-card" onclick="setF('finca','${f.id}');T('dashboard')"><div style="position:absolute;top:8px;right:8px"><button onclick="event.stopPropagation();delFinca('${f.id}')" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:15px">x</button><button onclick="event.stopPropagation();editFinca('${f.id}')" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:11px;margin-right:4px">editar</button></div><div class="cn">${f.nombre}</div><div class="cm">${f.tipo} - ${f.manzanas} mz</div><div style="margin-top:8px;display:flex;flex-direction:column;gap:2px;font-size:11px"><span style="color:var(--green)">Ing: ${C$(k2.ing)}</span><span style="color:var(--red)">Gas: ${C$(k2.gastos)}</span><span style="font-weight:600;color:${k2.utilidad>=0?'var(--green)':'var(--red)'}">${C$(k2.utilidad)}</span></div></div>`}).join('')}</div>`;
+}
+
+function rCiclos(){
+  document.getElementById('content').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="stitle" style="margin:0;border:none">Ciclos de produccion</div><button class="btn btn-g" onclick="openModal('ciclo')">+ Nuevo ciclo</button></div>
+    <div class="ciclo-list">${S.ciclos.map(c=>{const k2=kpis(c.finca_id,c.id);return`<div class="ciclo-card" onclick="setF('ciclo','${c.id}');T('dashboard')"><div style="position:absolute;top:8px;right:8px"><button onclick="event.stopPropagation();delItem('ciclos','${c.id}')" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:15px">x</button><button onclick="event.stopPropagation();editCiclo('${c.id}')" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:11px;margin-right:4px">editar</button></div><div class="cn">${c.nombre}<span class="status-pill st-${c.estado}">${c.estado}</span></div><div class="cm">${gF(c.finca_id).nombre} - ${c.inicio} a ${c.fin}</div><div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px"><div><div style="color:#999;font-size:10px">Cosechado</div><div style="font-family:var(--mono);color:var(--green)">${qqCosechados(c.finca_id,c.id).toFixed(1)} qq</div></div><div><div style="color:#999;font-size:10px">Gastos</div><div style="font-family:var(--mono);color:var(--red)">${C$(k2.gastos)}</div></div><div><div style="color:#999;font-size:10px">Utilidad</div><div style="font-family:var(--mono);color:${k2.utilidad>=0?'var(--green)':'var(--red)'}">${C$(k2.utilidad)}</div></div></div></div>`}).join('')}</div>`;
+}
+
+function rReportes(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const k=kpis(fi,ci);const deriv=derivadosTotales(fi,ci);
+  const meses=getMeses();
+  const ingMes=meses.map(m=>S.ventas.filter(v=>v.fecha.startsWith(m)&&(fi==='all'||v.finca_id===fi)).reduce((s,v)=>s+v.qq_vendidos*v.precio_qq,0));
+  const gasMes=meses.map(m=>S.gastos_campo.filter(g=>g.fecha.startsWith(m)&&(fi==='all'||g.finca_id===fi)).reduce((s,g)=>s+g.monto,0));
+  const utilMes=ingMes.map((v,i)=>v-gasMes[i]);
+  const tFilt=S.trillos.filter(t=>fi==='all'||t.finca_id===fi);
+  const totNeto=tFilt.reduce((s,t)=>s+(t.qq_neto_granza||0),0);
+  const totSeco=tFilt.reduce((s,t)=>s+(t.qq_seco||0),0);
+  const rendAE=totSeco>0?Math.round(deriv.arroz_entero/totSeco*100):0;
+  const rCpqq=costoPorQQ(fi,ci);
+  document.getElementById('content').innerHTML=`
+    <div class="filters"><label>Finca:</label><select onchange="setF('finca',this.value)">${fincaOpts(fi)}</select><label>Ciclo:</label><select onchange="setF('ciclo',this.value)">${cicloOpts(ci)}</select><button class="btn btn-b" onclick="exportPDF()">Exportar PDF</button></div>
+    <div class="cards cards-4"><div class="card g"><div class="lbl">Ingresos</div><div class="val">${C$(k.ing)}</div></div><div class="card r"><div class="lbl">Gastos</div><div class="val">${C$(k.gastos)}</div></div><div class="card ${k.utilidad>=0?'g':'r'}"><div class="lbl">Utilidad</div><div class="val">${C$(k.utilidad)}</div></div><div class="card a"><div class="lbl">Margen</div><div class="val">${Math.round(k.margen)}%</div></div></div>
+    <div class="stitle">Cadena productiva con merma</div>
+    <div class="cards cards-5">
+      <div class="card b"><div class="lbl">QQ cosechados</div><div class="val">${fmtQQ(k.qq)}</div></div>
+      <div class="card b"><div class="lbl">QQ neto granza</div><div class="val">${fmtQQ(totNeto)}</div></div>
+      <div class="card t"><div class="lbl">QQ secos (12.5°)</div><div class="val">${fmtQQ(totSeco)}</div></div>
+      <div class="card r"><div class="lbl">Merma total</div><div class="val">${fmtQQ(totNeto-totSeco)}</div><div class="sub">${totNeto>0?((totNeto-totSeco)/totNeto*100).toFixed(1)+'%':'--'}</div></div>
+      <div class="card g"><div class="lbl">Rendimiento AE</div><div class="val">${rendAE}%</div><div class="sub">del total seco</div></div>
+    </div>
+    <div class="stitle">Costo de produccion por quintal</div>
+    <div class="cards cards-4">
+      <div class="card b"><div class="lbl">Costo / QQ seco</div><div class="val" style="font-size:15px">${rCpqq.costoQQseco>0?C$(rCpqq.costoQQseco):'--'}</div><div class="sub">Gastos totales / QQ secos</div></div>
+      <div class="card b"><div class="lbl">Costo / QQ arroz entero</div><div class="val" style="font-size:15px">${rCpqq.costoQQae>0?C$(rCpqq.costoQQae):'--'}</div><div class="sub">Gastos totales / QQ AE</div></div>
+      <div class="card ${rCpqq.promVenta>0?'g':''}"><div class="lbl">Precio prom. venta / QQ</div><div class="val" style="font-size:15px">${rCpqq.promVenta>0?C$(rCpqq.promVenta):'--'}</div><div class="sub">Promedio todos los derivados</div></div>
+      <div class="card ${rCpqq.margenQQ>=0?'g':'r'}"><div class="lbl">Margen / QQ vendido</div><div class="val" style="font-size:15px">${rCpqq.margenQQ!==0?C$(rCpqq.margenQQ):'--'}</div><div class="sub">${rCpqq.costoQQseco>0&&rCpqq.promVenta>0?((rCpqq.margenQQ/rCpqq.promVenta)*100).toFixed(1)+'% del precio':'Sin ventas'}</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="cbox"><h3>Tendencia de utilidad mensual</h3>${meses.length?`<div style="height:150px"><canvas id="rch1"></canvas></div>`:'<div class="empty">Sin datos</div>'}</div>
+      <div class="cbox"><h3>Ingresos vs Gastos mensual</h3>${meses.length?`<div style="height:150px"><canvas id="rch2"></canvas></div>`:'<div class="empty">Sin datos</div>'}</div>
+    </div>
+    <div class="stitle">P&L completo por finca</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Finca</th><th>Mz</th><th>QQ cosech.</th><th>QQ secos</th><th>Merma</th><th>QQ/Mz</th><th>Gasto campo</th><th>Costo trillo</th><th>Total costos</th><th>Costo/QQ seco</th><th>Costo/QQ AE</th><th>Ingresos</th><th>Utilidad</th><th>Margen</th></tr></thead>
+    <tbody>${S.fincas.map(f=>{
+      const k2=kpis(f.id,'all');const tF=S.trillos.filter(t=>t.finca_id===f.id);
+      const neto=tF.reduce((s,t)=>s+(t.qq_neto_granza||0),0);const seco=tF.reduce((s,t)=>s+(t.qq_seco||0),0);
+      const qm=f.manzanas>0&&k2.qq>0?(k2.qq/f.manzanas).toFixed(1):'--';
+      const cpF=costoPorQQ(f.id,'all');return`<tr><td><strong>${f.nombre}</strong></td><td class="num">${f.manzanas}</td><td class="num">${k2.qq.toFixed(1)}</td><td class="num" style="color:var(--teal)">${seco.toFixed(1)}</td><td class="num" style="color:var(--red)">-${(neto-seco).toFixed(1)}</td><td class="num">${qm}</td><td class="num" style="color:var(--red)">${C$(k2.gc)}</td><td class="num" style="color:var(--amber)">${C$(k2.ct)}</td><td class="num" style="color:var(--red)">${C$(k2.gastos)}</td><td class="num" style="color:var(--blue)">${cpF.costoQQseco>0?C$(cpF.costoQQseco):'--'}</td><td class="num" style="color:var(--blue)">${cpF.costoQQae>0?C$(cpF.costoQQae):'--'}</td><td class="num" style="color:var(--green)">${C$(k2.ing)}</td><td><span class="bdg ${k2.utilidad>=0?'bdg-p':'bdg-n'}">${C$(k2.utilidad)}</span></td><td class="num">${Math.round(k2.margen)}%</td></tr>`;
+    }).join('')}</tbody></table></div>
+    <div class="stitle">Derivados - produccion y venta</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Derivado</th><th>QQ producidos</th><th>QQ vendidos</th><th>% del seco</th><th>Ingresos</th><th>Precio prom./qq</th></tr></thead>
+    <tbody>${DERIVADOS.map(d=>{
+      const qp=deriv[d];const vs=S.ventas.filter(v=>v.derivado===d&&(fi==='all'||v.finca_id===fi));
+      const qv=vs.reduce((s,v)=>s+v.qq_vendidos,0);const ing=vs.reduce((s,v)=>s+v.qq_vendidos*v.precio_qq,0);
+      const prom=qv>0?Math.round(ing/qv):0;const pctT=totSeco>0?Math.round(qp/totSeco*100):0;
+      return`<tr><td><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:${DCOLORS[d]}"></span><strong>${DNAMES[d]}</strong></span></td><td class="num">${qp.toFixed(1)} qq</td><td class="num">${qv.toFixed(1)} qq</td><td><div class="pbar-wrap"><div class="pbar" style="width:${pctT}px;background:${DCOLORS[d]}"></div><span style="font-size:10px;margin-left:4px">${pctT}%</span></div></td><td class="num" style="color:var(--green)">${C$(ing)}</td><td class="num">${prom>0?C$(prom):'--'}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+  setTimeout(()=>{
+    if(meses.length){
+      const ctx1=document.getElementById('rch1');
+      if(ctx1)S.charts['rch1']=new Chart(ctx1,{type:'line',data:{labels:meses.map(mesLabel),datasets:[{data:utilMes,borderColor:'#1F7A4D',backgroundColor:'rgba(31,122,77,.08)',fill:true,tension:.35,borderWidth:2,pointRadius:3,pointBackgroundColor:'#1F7A4D'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:10},callback:v=>'C$'+Math.round(v/1000)+'K'},grid:{color:'rgba(0,0,0,.05)'}}}}});
+      mkBar('rch2',meses.map(mesLabel),[{label:'Ingresos',data:ingMes,backgroundColor:'rgba(82,183,136,.55)',borderColor:'#1F7A4D',borderWidth:1.5},{label:'Gastos',data:gasMes,backgroundColor:'rgba(224,112,112,.55)',borderColor:'#9B1C1C',borderWidth:1.5}]);
+    }
+  },80);
+}
+
+function openModal(tipo){
+  const today=()=>new Date().toISOString().slice(0,10);
+  const bodies={
+    gasto_campo:`<div class="mh"><h2>Gasto de campo</h2><button class="mc" onclick="CM()">x</button></div>
+      <div class="fg"><div class="fi"><label>Fecha</label><input type="date" id="m-fecha" value="${today()}"></div><div class="fi"><label>Finca</label><select id="m-finca">${S.fincas.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('')}</select></div><div class="fi"><label>Ciclo</label><select id="m-ciclo"><option value="">Sin ciclo</option>${S.ciclos.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('')}</select></div><div class="fi"><label>Categoria</label><select id="m-cat">${CAT_CAMPO.map(c=>`<option>${c}</option>`).join('')}</select></div><div class="fi"><label>Descripcion</label><input type="text" id="m-desc" placeholder="Ej: Semilla INTA variedad..."></div><div class="fi"><label>Monto (C$)</label><input type="number" id="m-monto" min="0"></div><div class="fi full"><label>Notas</label><input type="text" id="m-notas"></div></div>
+      <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="saveGastoCampo()">Guardar</button></div>`,
+
+    cosecha:`<div class="mh"><h2>Registrar cosecha</h2><button class="mc" onclick="CM()">x</button></div>
+      <div class="fg"><div class="fi"><label>Fecha</label><input type="date" id="m-fecha" value="${today()}"></div><div class="fi"><label>Finca</label><select id="m-finca">${S.fincas.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('')}</select></div><div class="fi"><label>Ciclo</label><select id="m-ciclo"><option value="">Sin ciclo</option>${S.ciclos.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('')}</select></div><div class="fi"><label>QQ cosechados</label><input type="number" id="m-qq" min="0" oninput="calcMermaC()"></div><div class="fi"><label>Humedad al corte (grados)</label><input type="number" id="m-hum" min="0" max="40" value="22" oninput="calcMermaC()"><div class="hint">Humedad al momento del corte</div></div><div class="fi full"><div id="prev-merma-c" class="calc" style="display:none"></div></div><div class="fi full"><label>Notas</label><input type="text" id="m-notas"></div></div>
+      <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="saveCosecha()">Guardar</button></div>`,
+
+    trillo:`<div class="mh"><h2>Registrar trillo</h2><button class="mc" onclick="CM()">x</button></div>
+      <div class="stitle blue" style="margin-top:0">Datos generales</div>
+      <div class="fg"><div class="fi"><label>Fecha</label><input type="date" id="m-fecha" value="${today()}"></div><div class="fi"><label>Finca</label><select id="m-finca">${S.fincas.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('')}</select></div><div class="fi"><label>Ciclo</label><select id="m-ciclo"><option value="">Sin ciclo</option>${S.ciclos.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('')}</select></div><div class="fi"><label>Beneficio / Trillo</label><input type="text" id="m-beneficio" placeholder="Ej: Trillo El Progreso"></div><div class="fi"><label>Metodo de secado</label><select id="m-metodo"><option value="secadora">Secadora</option><option value="patio">Patio</option></select></div><div class="fi"><label>Notas</label><input type="text" id="m-notas"></div></div>
+      <div class="stitle blue">Pesaje en bascula</div>
+      <div class="fg"><div class="fi"><label>No. recibo bascula</label><input type="text" id="m-recibo" placeholder="Ej: 107282"></div><div class="fi"><label>Hora del pesaje</label><input type="time" id="m-hora"></div><div class="fi"><label>Nombre del productor</label><input type="text" id="m-productor" placeholder="Ej: Walter Zelaya"></div><div class="fi"><label>Placa del camion</label><input type="text" id="m-placa" placeholder="Ej: M 323702"></div><div class="fi"><label>Conductor</label><input type="text" id="m-conductor" placeholder="Ej: Carlos Rivas"></div><div class="fi"></div><div class="fi"><label>Peso bruto (qq) - camion lleno</label><input type="number" id="m-bruto" min="0" value="0" step="0.1" oninput="calcNeto()"></div><div class="fi"><label>Tara (qq) - camion vacio</label><input type="number" id="m-tara" min="0" value="0" step="0.1" oninput="calcNeto()"></div><div class="fi full"><div id="prev-neto" class="calc" style="display:none"></div></div></div>
+      <div class="stitle blue">Humedad y merma</div>
+      <div class="fg"><div class="fi"><label>Humedad entrada (grados)</label><input type="number" id="m-hent" min="0" max="40" value="22" oninput="calcMermaT()"></div><div class="fi"><label>Humedad objetivo (grados)</label><input type="number" id="m-hobj" min="0" max="20" value="12.5" oninput="calcMermaT()"></div><div class="fi full"><div id="prev-merma-t" class="calc" style="display:none"></div></div></div>
+      <div class="stitle amber">Tarifas del trillo (C$ por QQ seco)</div>
+      <div class="fg fg3"><div class="fi"><label>Descargue</label><input type="number" id="m-t-descargue" value="3" min="0" oninput="calcCostoT()"></div><div class="fi"><label>Secado</label><input type="number" id="m-t-secado" value="5" min="0" oninput="calcCostoT()"></div><div class="fi"><label>Mov. patio/sec a bodega</label><input type="number" id="m-t-mov_patio_bodega" value="2" min="0" oninput="calcCostoT()"></div><div class="fi"><label>Mov. bodega a pila</label><input type="number" id="m-t-mov_bodega_pila" value="2" min="0" oninput="calcCostoT()"></div><div class="fi"><label>Trillado</label><input type="number" id="m-t-trillado" value="18" min="0" oninput="calcCostoT()"></div><div class="fi"><div id="prev-costo-t" class="calc" style="margin-top:18px;display:none"></div></div></div>
+      <div class="stitle">Derivados obtenidos (qq)</div>
+      <div class="fg fg3">${DERIVADOS.map(d=>`<div class="fi"><label>${DNAMES[d]}</label><input type="number" id="m-${d}" min="0" value="0" step="0.1"></div>`).join('')}</div>
+      <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="saveTrillo()">Guardar</button></div>`,
+
+    venta:`<div class="mh"><h2>Registrar venta</h2><button class="mc" onclick="CM()">x</button></div>
+      <div class="fg"><div class="fi"><label>Fecha</label><input type="date" id="m-fecha" value="${today()}"></div><div class="fi"><label>Finca</label><select id="m-finca">${S.fincas.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('')}</select></div><div class="fi"><label>Ciclo</label><select id="m-ciclo"><option value="">Sin ciclo</option>${S.ciclos.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('')}</select></div><div class="fi"><label>Derivado</label><select id="m-deriv">${DERIVADOS.map(d=>`<option value="${d}">${DNAMES[d]}</option>`).join('')}</select></div><div class="fi"><label>QQ vendidos</label><input type="number" id="m-qq" min="0" step="0.1"></div><div class="fi"><label>Precio por qq (C$)</label><input type="number" id="m-precio" min="0"></div><div class="fi"><label>Comprador</label><input type="text" id="m-comprador" placeholder="MACESA, distribuidor..."></div><div class="fi full"><label>Notas</label><input type="text" id="m-notas"></div></div>
+      <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="saveVenta()">Guardar</button></div>`,
+
+    bascula:`<div class="mh"><h2>Ticket de Bascula</h2><button class="mc" onclick="CM()">x</button></div>
+      <div class="stitle blue" style="margin-top:0">Datos del ticket</div>
+      <div class="fg">
+        <div class="fi"><label>No. Ticket</label><input type="text" id="m-ticket" placeholder="Ej: 107282"></div>
+        <div class="fi"><label>Fecha</label><input type="date" id="m-fecha" value="${today()}"></div>
+        <div class="fi"><label>Hora</label><input type="time" id="m-hora" placeholder="22:15"></div>
+        <div class="fi"><label>Beneficio / Trillo</label><input type="text" id="m-beneficio" placeholder="Ej: Agroindustrial Santa Isabel"></div>
+        <div class="fi"><label>Finca</label><select id="m-finca">${S.fincas.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('')}</select></div>
+        <div class="fi"><label>Ciclo</label><select id="m-ciclo"><option value="">Sin ciclo</option>${S.ciclos.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('')}</select></div>
+      </div>
+      <div class="stitle blue">Datos del transporte</div>
+      <div class="fg">
+        <div class="fi"><label>Nombre del productor</label><input type="text" id="m-productor" placeholder="Ej: Walter Zelaya"></div>
+        <div class="fi"><label>Placa del camion</label><input type="text" id="m-placa" placeholder="Ej: M 323702"></div>
+        <div class="fi full"><label>Nombre del conductor</label><input type="text" id="m-conductor" placeholder="Ej: Carlos Rivas"></div>
+      </div>
+      <div class="stitle blue">Pesos en bascula (qq)</div>
+      <div class="fg">
+        <div class="fi"><label>Peso Bruto (qq)</label><input type="number" id="m-bruto" min="0" step="0.01" placeholder="0.00" oninput="calcNetoB()"></div>
+        <div class="fi"><label>Tara (qq)</label><input type="number" id="m-tara" min="0" step="0.01" placeholder="0.00" oninput="calcNetoB()"></div>
+        <div class="fi full"><div id="prev-neto-b" class="calc" style="display:none"></div></div>
+      </div>
+      <div class="fi" style="margin-top:4px"><label>Notas</label><input type="text" id="m-notas" placeholder="Observaciones adicionales"></div>
+      <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="saveBascula()">Guardar ticket</button></div>`,
+
+    finca:`<div class="mh"><h2>Nueva finca / sector</h2><button class="mc" onclick="CM()">x</button></div>
+      <div class="fg"><div class="fi"><label>Nombre</label><input type="text" id="m-nom" placeholder="Ej: Malacatoya Norte"></div><div class="fi"><label>Tipo</label><select id="m-tipo"><option value="finca">Finca</option><option value="campo">Campo</option><option value="sector">Sector</option><option value="viaje">Viaje comprado</option></select></div><div class="fi"><label>Manzanas</label><input type="number" id="m-mz" min="0" value="0"></div><div class="fi full"><label>Notas</label><input type="text" id="m-notas"></div></div>
+      <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="saveFinca()">Guardar</button></div>`,
+
+    ciclo:`<div class="mh"><h2>Nuevo ciclo de produccion</h2><button class="mc" onclick="CM()">x</button></div>
+      <div class="fg"><div class="fi full"><label>Nombre del ciclo</label><input type="text" id="m-nom" placeholder="Ej: Primera 2025, Segunda 2025"></div><div class="fi"><label>Finca</label><select id="m-finca">${S.fincas.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join('')}</select></div><div class="fi"><label>Estado</label><select id="m-estado"><option value="activo">Activo</option><option value="cosecha">En cosecha</option><option value="cerrado">Cerrado</option></select></div><div class="fi"><label>Fecha inicio</label><input type="date" id="m-inicio" value="${today()}"></div><div class="fi"><label>Fecha fin estimada</label><input type="date" id="m-fin"></div><div class="fi full"><label>Notas</label><input type="text" id="m-notas"></div></div>
+      <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="saveCiclo()">Guardar</button></div>`,
+  };
+  document.getElementById('mbody').innerHTML=bodies[tipo]||'';
+  document.getElementById('moverlay').style.display='flex';
+}
+
+// Live calculators
+function calcMermaC(){const qq=parseFloat(document.getElementById('m-qq')?.value)||0;const h=parseFloat(document.getElementById('m-hum')?.value)||0;const el=document.getElementById('prev-merma-c');if(!el)return;if(qq>0&&h>12.5){const s=calcQQseco(qq,h,12.5);el.textContent='Estimado seco a 12.5°: '+s.toFixed(1)+' qq  |  Merma: '+(qq-s).toFixed(1)+' qq';el.style.display='block';}else el.style.display='none';}
+function calcNeto(){const br=parseFloat(document.getElementById('m-bruto')?.value)||0;const ta=parseFloat(document.getElementById('m-tara')?.value)||0;const el=document.getElementById('prev-neto');if(!el)return;if(br>0&&ta>0){el.textContent='QQ neto granza: '+(br-ta).toFixed(1)+' qq  ('+br+' - '+ta+')';el.style.display='block';calcMermaT();}else el.style.display='none';}
+function calcMermaT(){const br=parseFloat(document.getElementById('m-bruto')?.value)||0;const ta=parseFloat(document.getElementById('m-tara')?.value)||0;const neto=br-ta;const he=parseFloat(document.getElementById('m-hent')?.value)||0;const ho=parseFloat(document.getElementById('m-hobj')?.value)||12.5;const el=document.getElementById('prev-merma-t');if(!el)return;if(neto>0&&he>ho){const s=calcQQseco(neto,he,ho);el.textContent='QQ secos: '+s.toFixed(1)+'  |  Merma: '+(neto-s).toFixed(1)+' qq ('+((neto-s)/neto*100).toFixed(1)+'%)';el.style.display='block';calcCostoT();}else el.style.display='none';}
+function calcCostoT(){const br=parseFloat(document.getElementById('m-bruto')?.value)||0;const ta=parseFloat(document.getElementById('m-tara')?.value)||0;const neto=br-ta;const he=parseFloat(document.getElementById('m-hent')?.value)||0;const ho=parseFloat(document.getElementById('m-hobj')?.value)||12.5;const seco=neto>0&&he>ho?calcQQseco(neto,he,ho):neto;const total=['descargue','secado','mov_patio_bodega','mov_bodega_pila','trillado'].reduce((s,k)=>s+(parseFloat(document.getElementById('m-t-'+k)?.value)||0),0);const costo=seco*total;const el=document.getElementById('prev-costo-t');if(!el)return;if(seco>0&&total>0){el.textContent='Costo estimado: '+C$(costo)+' ('+seco.toFixed(1)+' qq x C$'+total+'/qq)';el.style.display='block';}else el.style.display='none';}
+
+function CM(){document.getElementById('moverlay').style.display='none'}
+function v(id){return document.getElementById(id)?.value||''}
+function vn(id){return parseFloat(document.getElementById(id)?.value)||0}
+
+async function saveGastoCampo(){if(!v('m-desc')||!vn('m-monto')){alert('Completa descripcion y monto');return}const fId2=v('m-finca');const cId2=v('m-ciclo');const rec={fecha:v('m-fecha'),finca_id:fId2&&fId2!=='all'?fId2:null,ciclo_id:cId2&&cId2!==''?cId2:null,categoria:v('m-cat'),descripcion:v('m-desc'),monto:vn('m-monto'),notas:v('m-notas')};try{const[saved]=await sbPost('gastos_campo',rec);S.gastos_campo.unshift(saved);CM();T('campo');}catch(e){alert('Error: '+e.message);}}
+function saveCosecha(){const qq=vn('m-qq');if(!qq){alert('Ingresa los QQ cosechados');return}S.cosechas.push({id:uid(),fecha:v('m-fecha'),finca_id:v('m-finca'),ciclo_id:v('m-ciclo'),qq_cosechados:qq,humedad:vn('m-hum'),notas:v('m-notas')});CM();T('cosecha')}
+// saveTrillo legacy stub - replaced by saveTrillado2
+async function saveTrillo(){alert('Usa el modulo Proceso > Trillado para registrar trillos.');}
+
+async function saveVenta(){if(!vn('m-qq')||!vn('m-precio')){alert('Completa QQ y precio');return}const fId4=v('m-finca');const cId4=v('m-ciclo');const rec={fecha:v('m-fecha'),finca_id:fId4&&fId4!=='all'?fId4:null,ciclo_id:cId4&&cId4!==''?cId4:null,derivado:v('m-deriv'),qq_vendidos:vn('m-qq'),precio_qq:vn('m-precio'),comprador:v('m-comprador'),notas:v('m-notas')};try{const[saved]=await sbPost('ventas',rec);S.ventas.unshift(saved);CM();T('ventas');}catch(e){alert('Error: '+e.message);}}
+function calcNetoB(){const br=parseFloat(document.getElementById('m-bruto')?.value)||0;const ta=parseFloat(document.getElementById('m-tara')?.value)||0;const el=document.getElementById('prev-neto-b');if(!el)return;if(br>0&&ta>0){el.textContent='QQ Neto: '+(br-ta).toFixed(2)+' qq  ('+br.toFixed(2)+' - '+ta.toFixed(2)+')';el.style.display='block';}else el.style.display='none';}
+async function saveBascula(){
+  const bruto=parseFloat(document.getElementById('m-bruto')?.value)||0;
+  const tara=parseFloat(document.getElementById('m-tara')?.value)||0;
+  if(!bruto||!tara){alert('Ingresa peso bruto y tara');return}
+  if(!v('m-ticket')){alert('Ingresa el numero de ticket');return}
+  const neto=parseFloat((bruto-tara).toFixed(2));
+  
+  const bRec={no_ticket:v('m-ticket'),fecha:v('m-fecha'),hora:v('m-hora'),finca_id:v('m-finca'),ciclo_id:v('m-ciclo')||null,nombre_productor:v('m-productor'),placa:v('m-placa'),conductor:v('m-conductor'),peso_bruto:bruto,tara:tara,qq_neto:neto,beneficio:v('m-beneficio'),notas:v('m-notas')};try{const[saved]=await sbPost('basculas',bRec);S.basculas.unshift(saved);CM();T('bascula');}catch(e){alert('Error: '+e.message);}
+}
+async function saveFinca(){if(!v('m-nom').trim()){alert('Ingresa un nombre');return}const rec={nombre:v('m-nom').trim(),tipo:v('m-tipo'),manzanas:vn('m-mz'),notas:v('m-notas')};try{const[saved]=await sbPost('fincas',rec);S.fincas.push(saved);S.fincas.sort((a,b)=>a.nombre.localeCompare(b.nombre));CM();T('fincas');}catch(e){alert('Error: '+e.message);}}
+async function saveCiclo(){if(!v('m-nom').trim()){alert('Ingresa un nombre');return}const fId=v('m-finca');const rec={nombre:v('m-nom').trim(),finca_id:fId&&fId!=='all'?fId:null,inicio:v('m-inicio')||null,fin:v('m-fin')||null,estado:v('m-estado'),notas:v('m-notas')};try{const[saved]=await sbPost('ciclos',rec);S.ciclos.unshift(saved);CM();T('ciclos');}catch(e){alert('Error: '+e.message);}}
+
+
+// ── EDIT FINCA ──
+function editFinca(id){
+  const f=S.fincas.find(x=>x.id===id);if(!f)return;
+  const tipos=['finca','campo','sector','viaje comprado'];
+  document.getElementById('mbody').innerHTML=`<div class="mh"><h2>Editar finca</h2><button class="mc" onclick="CM()">x</button></div>
+    <div class="fg">
+      <div class="fi full"><label>Nombre</label><input type="text" id="m-nom" value="${f.nombre}"></div>
+      <div class="fi"><label>Tipo</label><select id="m-tipo">${tipos.map(t=>`<option value="${t}" ${f.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="fi"><label>Manzanas</label><input type="number" id="m-mz" value="${f.manzanas}" min="0" step="0.1"></div>
+      <div class="fi full"><label>Notas</label><input type="text" id="m-notas" value="${f.notas||''}"></div>
+    </div>
+    <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="updateFinca('${id}')">Guardar cambios</button></div>`;
+  document.getElementById('moverlay').style.display='flex';
+}
+async function updateFinca(id){
+  const nombre=document.getElementById('m-nom').value.trim();
+  if(!nombre){alert('Ingresa un nombre');return}
+  const rec={nombre,tipo:document.getElementById('m-tipo').value,manzanas:parseFloat(document.getElementById('m-mz').value)||0,notas:document.getElementById('m-notas').value};
+  try{
+    await sbPatch('fincas',id,rec);
+    const idx=S.fincas.findIndex(f=>f.id===id);
+    if(idx>=0)Object.assign(S.fincas[idx],rec);
+    CM();rFincas();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+// ── EDIT CICLO ──
+function editCiclo(id){
+  const c=S.ciclos.find(x=>x.id===id);if(!c)return;
+  const estados=['activo','en cosecha','cerrado'];
+  document.getElementById('mbody').innerHTML=`<div class="mh"><h2>Editar ciclo</h2><button class="mc" onclick="CM()">x</button></div>
+    <div class="fg">
+      <div class="fi full"><label>Nombre del ciclo</label><input type="text" id="m-nom" value="${c.nombre}"></div>
+      <div class="fi"><label>Finca</label><select id="m-finca">${S.fincas.map(f=>`<option value="${f.id}" ${c.finca_id===f.id?'selected':''}>${f.nombre}</option>`).join('')}</select></div>
+      <div class="fi"><label>Estado</label><select id="m-estado">${estados.map(e=>`<option value="${e}" ${c.estado===e?'selected':''}>${e}</option>`).join('')}</select></div>
+      <div class="fi"><label>Fecha inicio</label><input type="date" id="m-inicio" value="${c.inicio||''}"></div>
+      <div class="fi"><label>Fecha fin estimada</label><input type="date" id="m-fin" value="${c.fin||''}"></div>
+      <div class="fi full"><label>Notas</label><input type="text" id="m-notas" value="${c.notas||''}"></div>
+    </div>
+    <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="updateCiclo('${id}')">Guardar cambios</button></div>`;
+  document.getElementById('moverlay').style.display='flex';
+}
+async function updateCiclo(id){
+  const nombre=document.getElementById('m-nom').value.trim();
+  if(!nombre){alert('Ingresa un nombre');return}
+  const fId=document.getElementById('m-finca').value;
+  const rec={nombre,finca_id:fId&&fId!=='all'?fId:null,estado:document.getElementById('m-estado').value,inicio:document.getElementById('m-inicio').value||null,fin:document.getElementById('m-fin').value||null,notas:document.getElementById('m-notas').value};
+  try{
+    await sbPatch('ciclos',id,rec);
+    const idx=S.ciclos.findIndex(c=>c.id===id);
+    if(idx>=0)Object.assign(S.ciclos[idx],rec);
+    CM();rCiclos();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+
+// EDIT BASCULA
+function editBascula(id){
+  const b=S.basculas.find(x=>x.id===id);if(!b)return;
+  document.getElementById('mbody').innerHTML=`<div class="mh"><h2>Editar ticket de bascula</h2><button class="mc" onclick="CM()">x</button></div>
+    <div class="stitle blue" style="margin-top:0">Datos del ticket</div>
+    <div class="fg">
+      <div class="fi"><label>No. Ticket</label><input type="text" id="m-ticket" value="${b.no_ticket||''}"></div>
+      <div class="fi"><label>Fecha</label><input type="date" id="m-fecha" value="${b.fecha||''}"></div>
+      <div class="fi"><label>Hora</label><input type="time" id="m-hora" value="${b.hora||''}"></div>
+      <div class="fi"><label>Beneficio / Trillo</label><input type="text" id="m-beneficio" value="${b.beneficio||''}"></div>
+      <div class="fi"><label>Finca</label><select id="m-finca">${S.fincas.map(f=>`<option value="${f.id}" ${b.finca_id===f.id?'selected':''}>${f.nombre}</option>`).join('')}</select></div>
+      <div class="fi"><label>Ciclo</label><select id="m-ciclo"><option value="">Sin ciclo</option>${S.ciclos.map(c=>`<option value="${c.id}" ${b.ciclo_id===c.id?'selected':''}>${c.nombre}</option>`).join('')}</select></div>
+    </div>
+    <div class="stitle blue">Datos del transporte</div>
+    <div class="fg">
+      <div class="fi"><label>Nombre del productor</label><input type="text" id="m-productor" value="${b.nombre_productor||''}"></div>
+      <div class="fi"><label>Placa del camion</label><input type="text" id="m-placa" value="${b.placa||''}"></div>
+      <div class="fi full"><label>Conductor</label><input type="text" id="m-conductor" value="${b.conductor||''}"></div>
+    </div>
+    <div class="stitle blue">Pesos en bascula (qq)</div>
+    <div class="fg">
+      <div class="fi"><label>Peso Bruto (qq)</label><input type="number" id="m-bruto" value="${b.peso_bruto||0}" min="0" step="0.01" oninput="calcNetoB()"></div>
+      <div class="fi"><label>Tara (qq)</label><input type="number" id="m-tara" value="${b.tara||0}" min="0" step="0.01" oninput="calcNetoB()"></div>
+      <div class="fi full"><div id="prev-neto-b" class="calc"></div></div>
+    </div>
+    <div class="fi" style="margin-top:4px"><label>Notas</label><input type="text" id="m-notas" value="${b.notas||''}"></div>
+    <div class="mf"><button class="btn btn-o" onclick="CM()">Cancelar</button><button class="btn btn-g" onclick="updateBascula('${id}')">Guardar cambios</button></div>`;
+  document.getElementById('moverlay').style.display='flex';
+  calcNetoB();
+}
+
+async function updateBascula(id){
+  const bruto=parseFloat(document.getElementById('m-bruto')?.value)||0;
+  const tara=parseFloat(document.getElementById('m-tara')?.value)||0;
+  if(!bruto||!tara){alert('Ingresa peso bruto y tara');return}
+  if(!v('m-ticket')){alert('Ingresa el numero de ticket');return}
+  const neto=parseFloat((bruto-tara).toFixed(2));
+  const fId=v('m-finca');const cId=v('m-ciclo');
+  const rec={
+    no_ticket:v('m-ticket'),fecha:v('m-fecha'),hora:v('m-hora'),
+    finca_id:fId&&fId!=='all'?fId:null,ciclo_id:cId||null,
+    nombre_productor:v('m-productor'),placa:v('m-placa'),
+    conductor:v('m-conductor'),peso_bruto:bruto,tara:tara,
+    qq_neto:neto,beneficio:v('m-beneficio'),notas:v('m-notas')
+  };
+  try{
+    await sbPatch('basculas',id,rec);
+    const idx=S.basculas.findIndex(b=>b.id===id);
+    if(idx>=0)Object.assign(S.basculas[idx],rec);
+    CM();T('bascula');
+  }catch(e){alert('Error: '+e.message);}
+}
+
+function fincaOpts(fi){return`<option value="all" ${fi==='all'?'selected':''}>Todas</option>${S.fincas.map(f=>`<option value="${f.id}" ${fi===f.id?'selected':''}>${f.nombre}</option>`).join('')}`}
+function cicloOpts(ci){return`<option value="all" ${ci==='all'?'selected':''}>Todos</option>${S.ciclos.map(c=>`<option value="${c.id}" ${ci===c.id?'selected':''}>${c.nombre}</option>`).join('')}`}
+function setF(tipo,val){if(tipo==='finca')S.filtroFinca=val;if(tipo==='ciclo')S.filtroCiclo=val;T(S.activeTab)}
+async function delItem(arr,id){if(!confirm('Eliminar este registro?'))return;const tbls={gastos_campo:'gastos_campo',cosechas:'cosechas',ventas:'ventas',basculas:'basculas',trillos:'trillos',ciclos:'ciclos'};const tbl=tbls[arr];if(tbl)try{await sbDelete(tbl,id);}catch(e){alert('Error: '+e.message);return;}S[arr]=S[arr].filter(x=>x.id!==id);T(S.activeTab);}
+async function delFinca(id){if(!confirm('Eliminar esta finca?'))return;try{await sbDelete('fincas',id);}catch(e){alert('Error: '+e.message);return;}S.fincas=S.fincas.filter(f=>f.id!==id);rFincas();}
+
+function exportPDF(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;const k=kpis(fi,ci);const deriv=derivadosTotales(fi,ci);
+  const nombre=fi==='all'?'Todas las fincas':gF(fi).nombre;const cicNombre=ci==='all'?'Todos los ciclos':gC(ci).nombre;
+  const tFilt=S.trillos.filter(t=>fi==='all'||t.finca_id===fi);
+  const totNeto=tFilt.reduce((s,t)=>s+(t.qq_neto_granza||0),0);const totSeco=tFilt.reduce((s,t)=>s+(t.qq_seco||0),0);
+  const filas=S.fincas.map(f=>{const k2=kpis(f.id,'all');const tF=S.trillos.filter(t=>t.finca_id===f.id);const seco=tF.reduce((s,t)=>s+(t.qq_seco||0),0);return`<tr><td>${f.nombre}</td><td>${f.manzanas} mz</td><td>${k2.qq.toFixed(1)} qq</td><td>${seco.toFixed(1)} qq</td><td>${C$(k2.gc)}</td><td>${C$(k2.ct)}</td><td>${C$(k2.gastos)}</td><td>${C$(k2.ing)}</td><td style="color:${k2.utilidad>=0?'#1F7A4D':'#9B1C1C'}">${C$(k2.utilidad)}</td><td>${Math.round(k2.margen)}%</td></tr>`}).join('');
+  const derivFilas=DERIVADOS.map(d=>{const vs=S.ventas.filter(v=>v.derivado===d&&(fi==='all'||v.finca_id===fi));const qv=vs.reduce((s,v)=>s+v.qq_vendidos,0);const ing=vs.reduce((s,v)=>s+v.qq_vendidos*v.precio_qq,0);return`<tr><td>${DNAMES[d]}</td><td>${deriv[d].toFixed(1)} qq</td><td>${qv.toFixed(1)} qq</td><td>${C$(ing)}</td></tr>`}).join('');
+  const w=window.open('','_blank','width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte P&L</title><style>body{font-family:Arial,sans-serif;font-size:12px;color:#333;padding:32px}h1{color:#1F7A4D;font-size:20px;margin-bottom:4px}h2{font-size:14px;color:#555;margin:20px 0 8px}.meta{font-size:11px;color:#888;margin-bottom:20px}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}.kcard{border:1px solid #ddd;border-radius:6px;padding:12px}.kcard .l{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}.kcard .v{font-size:18px;font-weight:700}table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px}th{background:#f4f5f6;padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:#777;border-bottom:1px solid #ddd}td{padding:7px 10px;border-bottom:.5px solid #eee}.g{color:#1F7A4D}.r{color:#9B1C1C}.a{color:#B5621B}@media print{button{display:none}}
+.spinner{width:32px;height:32px;border:3px solid var(--gray-mid);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f0f2f5;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999}
+.login-box{background:#fff;border-radius:12px;padding:40px;width:340px;box-shadow:0 4px 24px rgba(0,0,0,.1);text-align:center}
+.login-box .logo{font-size:32px;font-weight:800;color:var(--green);margin-bottom:4px;letter-spacing:-.5px}
+.login-box .sub{color:#999;font-size:12px;margin-bottom:24px}
+.login-box input{width:100%;padding:9px 12px;border:1px solid var(--gray-mid);border-radius:7px;font-family:var(--font);font-size:13px;margin-bottom:10px;outline:none;text-align:left;display:block;box-sizing:border-box}
+.login-box input:focus{border-color:var(--green)}
+.btn-login{width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;font-family:var(--font)}
+.btn-login:hover{background:#175e3a}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;display:none}
+.user-pill{display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,.9)}
+.user-pill .uname{font-weight:600}
+.btn-logout{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:10px;padding:3px 9px;border-radius:4px;cursor:pointer;font-family:var(--font)}
+.btn-logout:hover{background:rgba(255,255,255,.3)}
+
+
+.trillo-tabs{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--gray-mid);border-radius:8px;overflow:hidden}
+.trillo-tab{flex:1;padding:9px 6px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;background:#fff;border:none;font-family:var(--font);color:var(--gray2);transition:all .15s}
+.trillo-tab.active{background:var(--green);color:#fff;font-weight:600}
+.trillo-tab:not(:last-child){border-right:1px solid var(--gray-mid)}
+.tab-badge{display:inline-block;background:rgba(0,0,0,.1);color:inherit;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;font-weight:700}
+.trillo-tab.active .tab-badge{background:rgba(255,255,255,.25);color:#fff}
+.st-en_proceso{background:#FEF3C7;color:#B45309}
+.st-preseco{background:var(--red-pale);color:var(--red)}
+.st-seco{background:var(--green-pale);color:var(--green)}
+.st-parcial{background:var(--amber-pale);color:var(--amber)}
+.st-completado{background:var(--teal-pale);color:var(--teal)}
+.viaje-select-box{background:var(--green-pale);border:1px solid var(--green2);border-radius:8px;padding:10px 14px;margin-bottom:14px}
+.viaje-select-box label{font-size:11px;font-weight:600;color:var(--green);display:block;margin-bottom:5px}
+.viaje-select-box select{width:100%;padding:7px 10px;border:1px solid var(--gray-mid);border-radius:6px;font-family:var(--font);font-size:13px;background:#fff}
+
+</style></head><body>
+    <h1>Reporte P&L - Produccion de Arroz</h1>
+    <div class="meta">Finca: <strong>${nombre}</strong> - Ciclo: <strong>${cicNombre}</strong> - Generado: ${new Date().toLocaleDateString('es-NI')}</div>
+    <div class="kpis"><div class="kcard"><div class="l">Ingresos</div><div class="v g">${C$(k.ing)}</div></div><div class="kcard"><div class="l">Gastos</div><div class="v r">${C$(k.gastos)}</div></div><div class="kcard"><div class="l">Utilidad</div><div class="v ${k.utilidad>=0?'g':'r'}">${C$(k.utilidad)}</div></div><div class="kcard"><div class="l">Margen</div><div class="v a">${Math.round(k.margen)}%</div></div></div>
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kcard"><div class="l">QQ neto granza</div><div class="v">${fmtQQ(totNeto)}</div></div><div class="kcard"><div class="l">QQ secos (12.5 grados)</div><div class="v" style="color:#0F6E56">${fmtQQ(totSeco)}</div></div><div class="kcard"><div class="l">Merma</div><div class="v r">${fmtQQ(totNeto-totSeco)}</div></div></div>
+    <h2>P&L por finca</h2><table><thead><tr><th>Finca</th><th>Mz</th><th>QQ cosech.</th><th>QQ secos</th><th>Gasto campo</th><th>Costo trillo</th><th>Total costos</th><th>Ingresos</th><th>Utilidad</th><th>Margen</th></tr></thead><tbody>${filas}</tbody></table>
+    <h2>Derivados del trillo</h2><table><thead><tr><th>Derivado</th><th>QQ producidos</th><th>QQ vendidos</th><th>Ingresos</th></tr></thead><tbody>${derivFilas}</tbody></table>
+    <p style="font-size:10px;color:#aaa;margin-top:24px">Sistema P&L Produccion de Arroz - Joel Zelaya - ${new Date().toLocaleDateString('es-NI')}</p>
+    <script>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+
+
+</script>
+</script>
+</body>
+</html>
