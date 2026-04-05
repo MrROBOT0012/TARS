@@ -377,7 +377,7 @@ const sbDelete=(t,id)=>sbFetch(t,'DELETE',null,'?id=eq.'+id);
 
 // STATE
 let S={
-  fincas:[],ciclos:[],gastos_campo:[],cosechas:[],basculas:[],secados:[],embodegados:[],trillos:[],ventas:[],
+  fincas:[],ciclos:[],gastos_campo:[],cosechas:[],basculas:[],secados:[],embodegados:[],trillos:[],turnos_trillo:[],ventas:[],
   filtroFinca:'all',filtroCiclo:'all',activeTab:'dashboard',trilloTab:'secado',charts:{}
 };
 
@@ -385,14 +385,14 @@ const DERIVADOS=['arroz_entero','semolina','puntilla','pallana','fina'];
 const DNAMES={arroz_entero:'Arroz entero',semolina:'Semolina',puntilla:'Puntilla',pallana:'Pallana',fina:'Fina'};
 const DCOLORS={arroz_entero:'#1F7A4D',semolina:'#52B788',puntilla:'#B5621B',pallana:'#1A4E8A',fina:'#7C3AED'};
 const MESES_ES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-const CAT_CAMPO=['Insumos','Mano de obra','Maquinaria','Transporte','Combustible','Riego','Arriendo/Alquiler','Mantenimiento','Administracion','Otros'];
+const CAT_CAMPO=['Insumos','Insumos beneficio','Mano de obra','Maquinaria','Transporte','Combustible','Riego','Arriendo/Alquiler','Mantenimiento','Administracion','Otros'];
 const TARIFA_LABELS={descargue:'Descargue',secado:'Secado',mov_patio_bodega:'Mov. patio/sec a bodega',mov_bodega_pila:'Mov. bodega a pila',trillado:'Trillado'};
 
 // LOAD ALL DATA FROM SUPABASE
 async function loadAll(){
   showSpinner('Sincronizando datos...');
   try{
-    const [fincas,ciclos,gastos,cosechas,basculas,secados,embodegados,trillos,ventas]=await Promise.all([
+    const [fincas,ciclos,gastos,cosechas,basculas,secados,embodegados,trillos,turnos_trillo,ventas]=await Promise.all([
       sbGet('fincas','?order=nombre'),
       sbGet('ciclos','?order=inicio.desc'),
       sbGet('gastos_campo','?order=fecha.desc'),
@@ -401,6 +401,7 @@ async function loadAll(){
       sbGet('secados','?order=fecha.desc'),
       sbGet('embodegados','?order=fecha.desc'),
       sbGet('trillos','?order=fecha.desc'),
+      sbGet('turnos_trillo','?order=fecha.desc'),
       sbGet('ventas','?order=fecha.desc'),
     ]);
     S.fincas=fincas||[];S.ciclos=ciclos||[];S.gastos_campo=gastos||[];
@@ -410,6 +411,12 @@ async function loadAll(){
       if(typeof t.tarifas==='string')try{t.tarifas=JSON.parse(t.tarifas);}catch(e){t.tarifas={};}
       if(typeof t.derivados==='string')try{t.derivados=JSON.parse(t.derivados);}catch(e){t.derivados={};}
       if(!t.tarifas)t.tarifas={};if(!t.derivados)t.derivados={};
+      return t;
+    });
+    S.turnos_trillo=(turnos_trillo||[]).map(t=>{
+      if(typeof t.bascula_ids==='string')try{t.bascula_ids=JSON.parse(t.bascula_ids);}catch(e){t.bascula_ids=[];}
+      if(typeof t.derivados==='string')try{t.derivados=JSON.parse(t.derivados);}catch(e){t.derivados={};}
+      if(!t.bascula_ids)t.bascula_ids=[];if(!t.derivados)t.derivados={};
       return t;
     });
     S.ventas=ventas||[];
@@ -658,7 +665,8 @@ function rTrillo(){
   const nS=(S.secados||[]).filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).length;
   const nE=(S.embodegados||[]).filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).length;
   const nT=S.trillos.filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).length;
-  const tabs=[['secado','1. Secado',nS],['embodegado','2. Embodegado',nE],['trillado','3. Trillado',nT]];
+  const nTu=(S.turnos_trillo||[]).filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).length;
+  const tabs=[['secado','1. Secado',nS],['embodegado','2. Embodegado',nE],['trillado','3. Trillado',nT],['turnos','4. Turnos',nTu]];
   document.getElementById('content').innerHTML=`
     <div class="filters"><label>Finca:</label><select onchange="setF('finca',this.value)">${fincaOpts(fi)}</select><label>Ciclo:</label><select onchange="setF('ciclo',this.value)">${cicloOpts(ci)}</select></div>
     <div class="trillo-tabs">${tabs.map(([k,lbl,n])=>`<button class="trillo-tab ${tab===k?'active':''}" onclick="setTrilloTab('${k}')">${lbl}<span class="tab-badge">${n}</span></button>`).join('')}</div>
@@ -666,8 +674,8 @@ function rTrillo(){
   renderProcesoTab(tab);
 }
 function setTrilloTab(tab){S.trilloTab=tab;document.querySelectorAll('.trillo-tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.trillo-tab').forEach(b=>{if(b.onclick&&b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+tab+"'"))b.classList.add('active');});renderProcesoTab(tab);}
-function renderProcesoTab(tab){if(tab==='secado')rSecado();else if(tab==='embodegado')rEmbodegado();else rTrillado();}
-function delItemTabla(arr,id,tab){if(!confirm('Eliminar este registro?'))return;const tbls={secados:'secados',embodegados:'embodegados',trillos:'trillos'};const tbl=tbls[arr];if(tbl)sbDelete(tbl,id).catch(e=>alert('Error: '+e.message));S[arr]=(S[arr]||[]).filter(x=>x.id!==id);renderProcesoTab(tab);}
+function renderProcesoTab(tab){if(tab==='secado')rSecado();else if(tab==='embodegado')rEmbodegado();else if(tab==='turnos')rTurnos();else rTrillado();}
+function delItemTabla(arr,id,tab){if(!confirm('Eliminar este registro?'))return;const tbls={secados:'secados',embodegados:'embodegados',trillos:'trillos',turnos_trillo:'turnos_trillo'};const tbl=tbls[arr];if(tbl)sbDelete(tbl,id).catch(e=>alert('Error: '+e.message));S[arr]=(S[arr]||[]).filter(x=>x.id!==id);renderProcesoTab(tab);}
 
 // helpers
 const getTicket=id=>S.basculas.find(x=>x.id===id);
@@ -818,6 +826,11 @@ function onTicketChange(sel,ctx){
       const qqEl=document.getElementById('m-qq-emb');
       if(qqEl&&!qqEl.value)qqEl.value=sec.qq_seco.toFixed(2);
     }
+    // show/hide sacos pendientes based on trillado parcial
+    const tr=S.trillos.find(t=>t.bascula_id===sel.value);
+    const tu=(S.turnos_trillo||[]).find(t=>t.estado==='parcial'&&(t.bascula_ids||[]).includes(sel.value));
+    const secPend=document.getElementById('sacos-pend-section');
+    if(secPend)secPend.style.display=((tr&&tr.estado_trillo==='parcial')||tu)?'block':'none';
   }
 }
 
@@ -900,9 +913,13 @@ function rEmbodegado(){
       <button class="btn btn-g" onclick="openEmbodegadoModal()">+ Registrar embodegado</button>
     </div>
     <div class="tbl-wrap"><table><thead><tr>
-      <th>Ticket / Viaje</th><th>Fecha</th><th>QQ secos</th><th>QQ embodegados</th><th>Sacos</th><th>Precio/saco</th><th>Costo total</th><th>Bodega / Posicion</th><th>Notas</th><th></th>
+      <th>Ticket / Viaje</th><th>Fecha</th><th>QQ secos</th><th>QQ embodegados</th><th>Sacos</th><th>Precio/saco</th><th>Costo total</th><th>Pend. trillar</th><th>Bodega / Posicion</th><th>Notas</th><th></th>
     </tr></thead><tbody>${list.length?list.map(x=>{
       const sec=(S.secados||[]).find(s=>s.bascula_id===x.bascula_id);
+      const trilloRec=S.trillos.find(t=>t.bascula_id===x.bascula_id);
+      const esParcial=trilloRec&&trilloRec.estado_trillo==='parcial';
+      const turnoP=(S.turnos_trillo||[]).find(t=>t.estado==='parcial'&&(t.bascula_ids||[]).includes(x.bascula_id));
+      const showPend=esParcial||turnoP;
       return`<tr>
         <td><span class="tag tk" style="font-size:10px">${ticketLabel(x.bascula_id)}</span></td>
         <td class="num">${x.fecha}</td>
@@ -911,13 +928,14 @@ function rEmbodegado(){
         <td class="num">${x.sacos||0} sacos</td>
         <td class="num">${C$(x.precio_saco||0)}</td>
         <td class="num" style="color:var(--amber)">${C$((x.sacos||0)*(x.precio_saco||0))}</td>
+        <td class="num">${showPend?(x.sacos_pendientes||0)+' sacos':'<span style="color:#ccc">--</span>'}</td>
         <td style="font-size:11px">${x.bodega||'--'}</td>
         <td style="font-size:11px;color:#999">${x.notas||'--'}</td>
         <td style="white-space:nowrap">
           <div class="btn-actions"><button class="btn-edit" onclick="openEmbodegadoModal('${x.id}')">✏ Editar</button><button class="btn-del" onclick="delItemTabla('embodegados','${x.id}','embodegado')" title="Eliminar">✕</button></div>
         </td>
       </tr>`;
-    }).join(''):`<tr><td colspan="10" class="empty">Sin registros de embodegado.</td></tr>`}</tbody></table></div>`;
+    }).join(''):`<tr><td colspan="11" class="empty">Sin registros de embodegado.</td></tr>`}</tbody></table></div>`;
 }
 
 function openEmbodegadoModal(editId){
@@ -950,6 +968,12 @@ function openEmbodegadoModal(editId){
       <div class="fi"><label>Bodega / Posicion</label><input type="text" id="m-bodega" placeholder="Ej: Bodega 2, Fila 3" value="${ex.bodega||''}"></div>
       <div class="fi"><label>Notas</label><input type="text" id="m-notas" value="${ex.notas||''}"></div>
     </div>
+    <div id="sacos-pend-section" style="display:${(()=>{const tr=S.trillos.find(t=>t.bascula_id===ex.bascula_id);const tu=(S.turnos_trillo||[]).find(t=>t.estado==='parcial'&&(t.bascula_ids||[]).includes(ex.bascula_id));return(tr&&tr.estado_trillo==='parcial')||tu?'block':'none';})()}">
+      <div class="stitle amber">Sacos pendientes de trillar</div>
+      <div class="fg">
+        <div class="fi"><label>Sacos pendientes</label><input type="number" id="m-sacos-pend" min="0" value="${ex.sacos_pendientes||0}"><div class="hint">Sacos que quedaron en bodega esperando el proximo turno de trillo</div></div>
+      </div>
+    </div>
     <div class="mf">
       <button class="btn btn-o" onclick="CM()">Cancelar</button>
       <button class="btn btn-g" onclick="${isEdit?`updateEmbodegado('${editId}')`:'saveEmbodegado()'}">${isEdit?'Guardar cambios':'Registrar embodegado'}</button>
@@ -968,7 +992,8 @@ function getEmbodegadoRec(){
   const sacos=parseInt(document.getElementById('m-sacos')?.value||0);
   if(!qqEmb){alert('Ingresa los QQ embodegados');return null;}
   if(!sacos){alert('Ingresa la cantidad de sacos');return null;}
-  return{bascula_id:basId,finca_id:b.finca_id,ciclo_id:b.ciclo_id,fecha:document.getElementById('m-fecha').value,qq_embodegados:qqEmb,sacos,precio_saco:parseFloat(document.getElementById('m-precio-saco')?.value||0),bodega:document.getElementById('m-bodega')?.value||'',notas:document.getElementById('m-notas')?.value||''};
+  const sacosPend=parseInt(document.getElementById('m-sacos-pend')?.value||0);
+  return{bascula_id:basId,finca_id:b.finca_id,ciclo_id:b.ciclo_id,fecha:document.getElementById('m-fecha').value,qq_embodegados:qqEmb,sacos,precio_saco:parseFloat(document.getElementById('m-precio-saco')?.value||0),bodega:document.getElementById('m-bodega')?.value||'',notas:document.getElementById('m-notas')?.value||'',sacos_pendientes:sacosPend};
 }
 async function saveEmbodegado(){
   const rec=getEmbodegadoRec();if(!rec)return;
@@ -1131,6 +1156,171 @@ async function updateTrillado(id){
       Object.assign(S.trillos[idx],parsed);
     }
     CM();rTrillado();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+// ══════════════════════════════════════════════
+// TURNOS DE TRILLO
+// ══════════════════════════════════════════════
+function turnoDerivTotales(fi,ci){
+  const tot={arroz_entero:0,semolina:0,puntilla:0,pallana:0,fina:0};
+  (S.turnos_trillo||[]).filter(t=>(fi==='all'||t.finca_id===fi)&&(ci==='all'||t.ciclo_id===ci)).forEach(t=>DERIVADOS.forEach(d=>{tot[d]+=(t.derivados[d]||0)}));
+  return tot;
+}
+
+function rTurnos(){
+  const fi=S.filtroFinca,ci=S.filtroCiclo;
+  const list=(S.turnos_trillo||[]).filter(x=>(fi==='all'||x.finca_id===fi)&&(ci==='all'||x.ciclo_id===ci)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const totQQ=list.reduce((s,t)=>s+(t.qq_totales||0),0);
+  const totCosto=list.reduce((s,t)=>s+(t.qq_totales||0)*(t.precio_trillado_qq||0),0);
+  const derivTot=turnoDerivTotales(fi,ci);
+  document.getElementById('proceso-content').innerHTML=`
+    <div class="cards cards-4">
+      <div class="card p"><div class="lbl">Turnos registrados</div><div class="val">${list.length}</div></div>
+      <div class="card t"><div class="lbl">QQ totales en turnos</div><div class="val">${fmtQQ(totQQ)}</div><div class="sub">Capacidad turno: 1200 qq</div></div>
+      <div class="card g"><div class="lbl">Arroz entero</div><div class="val">${fmtQQ(derivTot.arroz_entero)}</div><div class="sub">Rendimiento: ${totQQ>0?((derivTot.arroz_entero/totQQ)*100).toFixed(1)+'%':'--'}</div></div>
+      <div class="card a"><div class="lbl">Costo trillado</div><div class="val">${C$(totCosto)}</div></div>
+    </div>
+    <div class="stitle">Derivados de turnos</div>
+    <div class="deriv-grid">${DERIVADOS.map(d=>{const pct=totQQ>0?((derivTot[d]/totQQ)*100).toFixed(1):0;return`<div class="deriv-card" style="border-top:3px solid ${DCOLORS[d]}"><div class="dname">${DNAMES[d]}</div><div class="dqq" style="color:${DCOLORS[d]}">${derivTot[d].toFixed(1)}</div><div class="dprice">qq producidos</div><div class="dprice">${pct}% del total</div></div>`;}).join('')}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="stitle" style="margin:0;border:none">Turnos de trillo</div>
+      <button class="btn btn-g" onclick="openTurnoModal()">+ Registrar turno</button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr>
+      <th>Fecha</th><th>Tickets</th><th>QQ totales</th><th>Origen</th><th>C$/qq</th><th>Costo total</th><th>Estado</th><th>Beneficio</th><th>AE</th><th></th>
+    </tr></thead><tbody>${list.length?list.map(t=>{
+      const ct=(t.qq_totales||0)*(t.precio_trillado_qq||0);
+      const ids=t.bascula_ids||[];
+      const ticketsStr=ids.map(id=>'#'+(S.basculas.find(b=>b.id===id)||{}).no_ticket||'?').join(', ');
+      return`<tr>
+        <td class="num">${t.fecha}</td>
+        <td style="font-size:10px;max-width:140px;overflow:hidden;text-overflow:ellipsis">${ticketsStr||'--'}</td>
+        <td class="num" style="color:var(--teal);font-weight:600">${(t.qq_totales||0).toFixed(1)} qq</td>
+        <td><span class="tag ${t.origen_pila==='bolquete'?'tt':'ta'}">${t.origen_pila==='bolquete'?'Silo/Bolquete':'Bodega/Saco'}</span></td>
+        <td class="num">${C$(t.precio_trillado_qq||0)}/qq</td>
+        <td class="num" style="color:var(--amber)">${C$(ct)}</td>
+        <td><span class="status-pill st-${t.estado||'completado'}">${t.estado==='parcial'?'Parcial':'Completado'}</span></td>
+        <td style="font-size:11px">${t.beneficio||'--'}</td>
+        <td class="num" style="color:var(--green);font-weight:600">${(t.derivados?.arroz_entero||0).toFixed(1)} qq</td>
+        <td style="white-space:nowrap">
+          <div class="btn-actions"><button class="btn-edit" onclick="openTurnoModal('${t.id}')">✏ Editar</button><button class="btn-del" onclick="delItemTabla('turnos_trillo','${t.id}','turnos')" title="Eliminar">✕</button></div>
+        </td>
+      </tr>`;
+    }).join(''):`<tr><td colspan="10" class="empty">Sin turnos registrados. Un turno agrupa varios viajes (tickets) en una sola corrida de trillo.</td></tr>`}</tbody></table></div>`;
+}
+
+function openTurnoModal(editId){
+  const ex=editId?((S.turnos_trillo||[]).find(x=>x.id===editId)||{}):{};
+  const today=new Date().toISOString().slice(0,10);
+  const isEdit=!!editId;
+  const derivs=ex.derivados||{};
+  const selectedIds=ex.bascula_ids||[];
+  const origen=ex.origen_pila||'bodega_saco';
+  const ticketCheckboxes=S.basculas.map(b=>{
+    const emb=(S.embodegados||[]).find(e=>e.bascula_id===b.id);
+    const checked=selectedIds.includes(b.id)?'checked':'';
+    const label=`#${b.no_ticket} — ${gF(b.finca_id).nombre} (${(b.qq_neto||0).toFixed(1)} qq)${emb?' ✅':''}`;
+    return`<label style="display:flex;align-items:center;gap:6px;padding:4px 6px;font-size:11.5px;cursor:pointer;border:1px solid var(--gray-mid);border-radius:6px;background:#fafbfd"><input type="checkbox" class="turno-ticket-cb" value="${b.id}" ${checked} onchange="calcTurnoQQ()"> ${label}</label>`;
+  }).join('');
+  document.getElementById('mbody').innerHTML=`
+    <div class="mh"><h2>${isEdit?'Editar turno de trillo':'Registrar turno de trillo'}</h2><button class="mc" onclick="CM()">x</button></div>
+    <div class="stitle blue" style="margin-top:0">Tickets participantes (multi-select)</div>
+    <div style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding:8px;border:1px solid var(--gray-mid);border-radius:8px;margin-bottom:12px">
+      ${ticketCheckboxes||'<div style="color:#999;font-size:12px">No hay tickets de bascula registrados</div>'}
+    </div>
+    <div class="stitle blue">Datos del turno</div>
+    <div class="fg">
+      <div class="fi"><label>Fecha del turno</label><input type="date" id="m-fecha" value="${ex.fecha||today}"></div>
+      <div class="fi"><label>Finca</label><select id="m-finca">${S.fincas.map(f=>`<option value="${f.id}" ${ex.finca_id===f.id?'selected':''}>${f.nombre}</option>`).join('')}</select></div>
+      <div class="fi"><label>Ciclo</label><select id="m-ciclo"><option value="">Sin ciclo</option>${S.ciclos.map(c=>`<option value="${c.id}" ${ex.ciclo_id===c.id?'selected':''}>${c.nombre}</option>`).join('')}</select></div>
+      <div class="fi"><label>QQ totales del turno</label><input type="number" id="m-qq-turno" min="0" max="1200" step="0.01" value="${ex.qq_totales||''}" placeholder="Max 1200 qq"><div class="hint">Capacidad max: 1200 qq</div></div>
+    </div>
+    <div class="fg">
+      <div class="fi"><label>Origen pila</label>
+        <select id="m-origen-pila">
+          <option value="bodega_saco" ${origen==='bodega_saco'?'selected':''}>Bodega/Saco</option>
+          <option value="bolquete" ${origen==='bolquete'?'selected':''}>Silo/Bolquete</option>
+        </select>
+      </div>
+      <div class="fi"><label>Estado</label>
+        <select id="m-estado-turno">
+          <option value="completado" ${(ex.estado||'completado')==='completado'?'selected':''}>Completado</option>
+          <option value="parcial" ${ex.estado==='parcial'?'selected':''}>Parcial</option>
+        </select>
+      </div>
+      <div class="fi"><label>Beneficio / Trillo</label><input type="text" id="m-beneficio" value="${ex.beneficio||''}" placeholder="Ej: Agroindustrial Santa Isabel"></div>
+    </div>
+    <div class="stitle amber">Precio de trillado</div>
+    <div class="fg">
+      <div class="fi"><label>Precio trillado (C$/qq)</label><input type="number" id="m-precio-trillado" min="0" step="0.01" value="${ex.precio_trillado_qq||0}"></div>
+      <div class="fi"><label>Notas</label><input type="text" id="m-notas" value="${ex.notas||''}"></div>
+    </div>
+    <div class="stitle">Derivados obtenidos (qq)</div>
+    <div class="fg fg3">${DERIVADOS.map(d=>`<div class="fi"><label>${DNAMES[d]}</label><input type="number" id="m-${d}" min="0" step="0.01" value="${derivs[d]||0}"></div>`).join('')}</div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="CM()">Cancelar</button>
+      <button class="btn btn-g" onclick="${isEdit?`updateTurno('${editId}')`:'saveTurno()'}">${isEdit?'Guardar cambios':'Registrar turno'}</button>
+    </div>`;
+  document.getElementById('moverlay').style.display='flex';
+}
+
+function calcTurnoQQ(){
+  const cbs=document.querySelectorAll('.turno-ticket-cb:checked');
+  let total=0;
+  cbs.forEach(cb=>{
+    const b=S.basculas.find(x=>x.id===cb.value);
+    const emb=(S.embodegados||[]).find(e=>e.bascula_id===cb.value);
+    total+=(emb?emb.qq_embodegados:b?b.qq_neto:0)||0;
+  });
+  const el=document.getElementById('m-qq-turno');
+  if(el&&!el.dataset.manual)el.value=total.toFixed(2);
+}
+
+function getTurnoRec(){
+  const cbs=document.querySelectorAll('.turno-ticket-cb:checked');
+  const bascula_ids=Array.from(cbs).map(cb=>cb.value);
+  const qq=parseFloat(document.getElementById('m-qq-turno')?.value||0);
+  if(!qq){alert('Ingresa los QQ totales del turno');return null;}
+  if(qq>1200&&!confirm('El turno excede 1200 qq. Continuar?'))return null;
+  const derivs={};DERIVADOS.forEach(d=>{derivs[d]=parseFloat(document.getElementById('m-'+d)?.value||0);});
+  const fId=document.getElementById('m-finca')?.value;
+  const cId=document.getElementById('m-ciclo')?.value;
+  return{
+    fecha:document.getElementById('m-fecha').value,
+    finca_id:fId||null,
+    ciclo_id:cId||null,
+    bascula_ids:JSON.stringify(bascula_ids),
+    qq_totales:qq,
+    origen_pila:document.getElementById('m-origen-pila')?.value||'bodega_saco',
+    estado:document.getElementById('m-estado-turno')?.value||'completado',
+    precio_trillado_qq:parseFloat(document.getElementById('m-precio-trillado')?.value||0),
+    beneficio:document.getElementById('m-beneficio')?.value||'',
+    notas:document.getElementById('m-notas')?.value||'',
+    derivados:JSON.stringify(derivs)
+  };
+}
+
+async function saveTurno(){
+  const rec=getTurnoRec();if(!rec)return;
+  try{
+    const[saved]=await sbPost('turnos_trillo',rec);
+    saved.bascula_ids=JSON.parse(saved.bascula_ids||'[]');
+    saved.derivados=JSON.parse(saved.derivados||'{}');
+    (S.turnos_trillo=S.turnos_trillo||[]).unshift(saved);CM();rTurnos();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+async function updateTurno(id){
+  const rec=getTurnoRec();if(!rec)return;
+  try{
+    await sbPatch('turnos_trillo',id,rec);
+    const idx=(S.turnos_trillo||[]).findIndex(x=>x.id===id);
+    if(idx>=0){
+      const parsed={...rec,bascula_ids:JSON.parse(rec.bascula_ids||'[]'),derivados:JSON.parse(rec.derivados||'{}')};
+      Object.assign(S.turnos_trillo[idx],parsed);
+    }
+    CM();rTurnos();
   }catch(e){alert('Error: '+e.message);}
 }
 
@@ -1614,7 +1804,7 @@ function openFabAction(){
   const tipo=tabMap[S.activeTab];
   if(tipo)openModal(tipo);
   else if(S.activeTab==='trillo'){
-    const subMap={secado:openSecadoModal,embodegado:openEmbodegadoModal,trillado:openTrilladoModal};
+    const subMap={secado:openSecadoModal,embodegado:openEmbodegadoModal,trillado:openTrilladoModal,turnos:openTurnoModal};
     const fn=subMap[S.trilloTab||'secado'];
     if(fn)fn();
   }
