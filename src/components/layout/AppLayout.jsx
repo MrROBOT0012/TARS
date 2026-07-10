@@ -16,26 +16,28 @@ export default function AppLayout() {
     ?? (location.pathname === '/' ? NAV_ITEMS[0] : null)
 
   return (
-    <div className="app-shell">
+    <div className="app-root">
       <InstallBanner />
-      <Sidebar />
-      <div className="main-area">
-        <PcTopBar title={current?.label ?? 'TARS'} />
-        <TopBar />
-        <main className="page-content">
-          <Outlet />
-        </main>
+      <div className="app-shell">
+        <Sidebar />
+        <div className="main-area">
+          <PcTopBar title={current?.label ?? 'TARS'} />
+          <TopBar />
+          <main className="page-content">
+            <Outlet />
+          </main>
+        </div>
+        <BottomNav onQuickAction={() => setQuickActionOpen(true)} />
+        {quickActionOpen && (
+          <QuickActionSheet
+            onClose={() => setQuickActionOpen(false)}
+            onNavigate={(path) => {
+              setQuickActionOpen(false)
+              navigate(path)
+            }}
+          />
+        )}
       </div>
-      <BottomNav onQuickAction={() => setQuickActionOpen(true)} />
-      {quickActionOpen && (
-        <QuickActionSheet
-          onClose={() => setQuickActionOpen(false)}
-          onNavigate={(path) => {
-            setQuickActionOpen(false)
-            navigate(path)
-          }}
-        />
-      )}
     </div>
   )
 }

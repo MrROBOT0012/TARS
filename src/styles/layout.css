@@ -1,6 +1,13 @@
-.app-shell {
+.app-root {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+.app-shell {
+  flex: 1;
+  min-height: 0;
 }
 
 /* ---------- PC Sidebar ---------- */
@@ -119,16 +126,20 @@
 
   .pc-topbar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-4) var(--space-6);
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 20;
   }
 
+}
+
+.pc-topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 /* ---------- Mobile Topbar ---------- */

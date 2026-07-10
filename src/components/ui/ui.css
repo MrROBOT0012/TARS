@@ -259,13 +259,12 @@
   }
 }
 
-/* Install banner */
+/* Install banner: a normal in-flow block (not fixed) so it pushes the
+   sticky header down while shown and leaves zero residual space the
+   instant it unmounts on dismiss — no overlap, no leftover gap. */
 .install-banner {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 80;
+  position: relative;
+  z-index: 70;
   display: flex;
   align-items: center;
   gap: var(--space-3);
