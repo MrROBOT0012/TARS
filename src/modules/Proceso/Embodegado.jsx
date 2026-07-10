@@ -1,0 +1,247 @@
+import { useEffect, useState } from 'react'
+import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
+import { useCiclo } from '../../hooks/useCiclo.jsx'
+import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
+import ListView from '../../components/ui/ListView.jsx'
+import FormPanel from '../../components/layout/FormPanel.jsx'
+
+function emptyForm(fincaId) {
+  return {
+    bascula_id: '',
+    fecha: todayInput(),
+    qq_embodegados: '',
+    sacos: '',
+    precio_saco: '',
+    bodega: '',
+    sacos_pendientes: '',
+    finca_id: fincaId ?? '',
+    notas: ''
+  }
+}
+
+export default function Embodegado({ autoOpenNew }) {
+  const { selectedCicloId, selectedCiclo, ciclos } = useCiclo()
+  const cicloFilter = [['ciclo_id', 'eq', selectedCicloId]]
+  const enabled = !!selectedCicloId
+
+  const { data: basculas } = useTable('basculas', { filters: cicloFilter, enabled })
+  const { data: secados } = useTable('secados', { filters: cicloFilter, enabled })
+  const { data: embodegados, loading, refetch } = useTable('embodegados', {
+    filters: cicloFilter,
+    orderBy: { column: 'fecha', ascending: false },
+    enabled
+  })
+
+  const [editing, setEditing] = useState(null)
+  const [form, setForm] = useState(emptyForm())
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (autoOpenNew && enabled) openNew()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenNew, enabled])
+
+  function openNew() {
+    setForm(emptyForm(selectedCiclo?.finca_id))
+    setEditing('new')
+  }
+
+  function openEdit(row) {
+    setForm({
+      bascula_id: row.bascula_id ?? '',
+      fecha: formatDateInput(row.fecha),
+      qq_embodegados: row.qq_embodegados ?? '',
+      sacos: row.sacos ?? '',
+      precio_saco: row.precio_saco ?? '',
+      bodega: row.bodega ?? '',
+      sacos_pendientes: row.sacos_pendientes ?? '',
+      finca_id: row.finca_id ?? '',
+      notas: row.notas ?? ''
+    })
+    setEditing(row.id)
+  }
+
+  function handleBasculaChange(id) {
+    const b = basculas.find((x) => x.id === Number(id))
+    const secado = secados.find((s) => s.bascula_id === Number(id))
+    setForm({
+      ...form,
+      bascula_id: id,
+      finca_id: b?.finca_id ?? form.finca_id,
+      qq_embodegados: secado?.qq_seco ?? form.qq_embodegados
+    })
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setSaving(true)
+    setError('')
+    try {
+      const values = {
+        bascula_id: form.bascula_id ? Number(form.bascula_id) : null,
+        finca_id: form.finca_id || null,
+        ciclo_id: selectedCicloId,
+        fecha: form.fecha,
+        qq_embodegados: form.qq_embodegados ? Number(form.qq_embodegados) : 0,
+        sacos: form.sacos ? Number(form.sacos) : 0,
+        precio_saco: form.precio_saco ? Number(form.precio_saco) : 0,
+        bodega: form.bodega || null,
+        sacos_pendientes: form.sacos_pendientes ? Number(form.sacos_pendientes) : 0,
+        notas: form.notas || null
+      }
+      if (editing === 'new') {
+        await insertRow('embodegados', values)
+      } else {
+        await updateRow('embodegados', editing, values)
+      }
+      setEditing(null)
+      await refetch()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(row) {
+    if (!confirm('¿Eliminar este registro de embodegado?')) return
+    await deleteRow('embodegados', row.id)
+    await refetch()
+  }
+
+  const ticketOf = (id) => basculas.find((b) => b.id === id)?.no_ticket ?? '—'
+  const costoSacos = (Number(form.precio_saco) || 0) * (Number(form.sacos) || 0)
+
+  if (!ciclos.length) {
+    return <div className="empty-state">Crea un ciclo primero.</div>
+  }
+  if (!selectedCicloId) {
+    return <div className="empty-state">Selecciona un ciclo activo.</div>
+  }
+
+  return (
+    <div>
+      <div className="section-header">
+        <h2>Embodegado</h2>
+        <button className="btn btn-primary btn-sm" onClick={openNew}>
+          + Nuevo embodegado
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="loading-wrap">
+          <span className="spinner" />
+        </div>
+      ) : (
+        <ListView
+          data={embodegados}
+          emptyMessage="No hay registros de embodegado en este ciclo"
+          columns={[
+            { key: 'ticket', label: 'Ticket', mono: true, render: (r) => `#${ticketOf(r.bascula_id)}` },
+            { key: 'fecha', label: 'Fecha', render: (r) => formatDate(r.fecha) },
+            { key: 'qq_embodegados', label: 'QQ embodegados', mono: true, render: (r) => formatQq(r.qq_embodegados, 1) },
+            { key: 'sacos', label: 'Sacos', mono: true },
+            { key: 'bodega', label: 'Bodega' },
+            { key: 'sacos_pendientes', label: 'Sacos pend.', mono: true }
+          ]}
+          renderCard={(r) => (
+            <div className="list-card-main">
+              <div className="list-card-title mono">#{ticketOf(r.bascula_id)}</div>
+              <div className="list-card-sub">
+                {formatDate(r.fecha)} &middot; {r.bodega || 'sin bodega'}
+              </div>
+              <div className="list-card-value mono" style={{ marginTop: 6 }}>
+                {formatQq(r.qq_embodegados, 1)} &middot; {r.sacos} sacos
+              </div>
+            </div>
+          )}
+          actions={(r) => (
+            <>
+              <button className="btn btn-ghost btn-sm" onClick={() => openEdit(r)}>
+                Editar
+              </button>
+              <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(r)}>
+                Eliminar
+              </button>
+            </>
+          )}
+        />
+      )}
+
+      {editing && (
+        <FormPanel
+          title={editing === 'new' ? 'Nuevo embodegado' : 'Editar embodegado'}
+          onClose={() => setEditing(null)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setEditing(null)}>
+                Cancelar
+              </button>
+              <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
+                {saving ? <span className="spinner" /> : 'Guardar'}
+              </button>
+            </>
+          }
+        >
+          <form onSubmit={handleSubmit}>
+            <div className="field">
+              <label>Viaje (ticket de báscula)</label>
+              <select value={form.bascula_id} onChange={(e) => handleBasculaChange(e.target.value)} required>
+                <option value="">Seleccionar viaje</option>
+                {basculas.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    #{b.no_ticket} &middot; {b.nombre_productor}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Fecha</label>
+              <input type="date" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} required />
+            </div>
+            <div className="field">
+              <label>QQ embodegados</label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.qq_embodegados}
+                onChange={(e) => setForm({ ...form, qq_embodegados: e.target.value })}
+                required
+              />
+              <span className="field-hint">Prellenado desde el secado del viaje seleccionado</span>
+            </div>
+            <div className="field-row">
+              <div className="field">
+                <label>Sacos</label>
+                <input type="number" value={form.sacos} onChange={(e) => setForm({ ...form, sacos: e.target.value })} />
+              </div>
+              <div className="field">
+                <label>Precio / saco (C$)</label>
+                <input type="number" step="0.01" value={form.precio_saco} onChange={(e) => setForm({ ...form, precio_saco: e.target.value })} />
+              </div>
+            </div>
+            <span className="field-hint" style={{ display: 'block', marginTop: -8, marginBottom: 16 }}>
+              Costo total de sacos: {formatCordoba(costoSacos)}
+            </span>
+            <div className="field-row">
+              <div className="field">
+                <label>Bodega</label>
+                <input value={form.bodega} onChange={(e) => setForm({ ...form, bodega: e.target.value })} />
+              </div>
+              <div className="field">
+                <label>Sacos pendientes</label>
+                <input type="number" value={form.sacos_pendientes} onChange={(e) => setForm({ ...form, sacos_pendientes: e.target.value })} />
+              </div>
+            </div>
+            <div className="field">
+              <label>Notas</label>
+              <textarea value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })} />
+            </div>
+            {error && <p className="field-error">{error}</p>}
+          </form>
+        </FormPanel>
+      )}
+    </div>
+  )
+}

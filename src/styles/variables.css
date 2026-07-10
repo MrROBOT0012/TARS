@@ -1,0 +1,47 @@
+:root {
+  --green: #1A6B42;
+  --green2: #228B55;
+  --green-light: #D4EDE1;
+  --amber: #C47B1A;
+  --amber-light: #FDF0DC;
+  --red: #C0392B;
+  --red-light: #FDECEA;
+  --blue: #1B5FA3;
+  --blue-light: #DCE9F8;
+  --teal: #0E7A6B;
+  --teal-light: #D4F0EC;
+  --ink: #0D1410;
+  --ink2: #2A3830;
+  --ink3: #516458;
+  --mist: #EEF2EE;
+  --border: #DDE5DB;
+  --white: #FFFFFF;
+
+  --font-display: 'Sora', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(13, 20, 16, 0.06);
+  --shadow-md: 0 4px 12px rgba(13, 20, 16, 0.08);
+  --shadow-lg: 0 12px 32px rgba(13, 20, 16, 0.14);
+
+  --topbar-height: 56px;
+  --bottomnav-height: 64px;
+  --sidebar-width: 224px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --transition-fast: 150ms ease;
+  --transition-base: 220ms ease;
+}

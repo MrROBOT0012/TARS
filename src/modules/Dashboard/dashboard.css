@@ -1,0 +1,16 @@
+.flow-card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 769px) {
+  .flow-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.deriv-scroll {
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+}

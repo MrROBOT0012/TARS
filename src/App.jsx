@@ -1,0 +1,57 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
+import { CicloProvider } from './hooks/useCiclo.jsx'
+import Login from './modules/Auth/Login.jsx'
+import AppLayout from './components/layout/AppLayout.jsx'
+import Dashboard from './modules/Dashboard/Dashboard.jsx'
+import Ciclos from './modules/Ciclos/Ciclos.jsx'
+import Fincas from './modules/Fincas/Fincas.jsx'
+import Campo from './modules/Campo/Campo.jsx'
+import Cosecha from './modules/Cosecha/Cosecha.jsx'
+import Bascula from './modules/Bascula/Bascula.jsx'
+import Proceso from './modules/Proceso/Proceso.jsx'
+import Ventas from './modules/Ventas/Ventas.jsx'
+import Reportes from './modules/Reportes/Reportes.jsx'
+
+function Gate() {
+  const { session, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="loading-wrap" style={{ minHeight: '100vh' }}>
+        <span className="spinner" />
+      </div>
+    )
+  }
+
+  if (!session) return <Login />
+
+  return (
+    <CicloProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/ciclos" element={<Ciclos />} />
+            <Route path="/fincas" element={<Fincas />} />
+            <Route path="/campo" element={<Campo />} />
+            <Route path="/cosecha" element={<Cosecha />} />
+            <Route path="/bascula" element={<Bascula />} />
+            <Route path="/proceso" element={<Proceso />} />
+            <Route path="/ventas" element={<Ventas />} />
+            <Route path="/reportes" element={<Reportes />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </CicloProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
+  )
+}

@@ -1,0 +1,298 @@
+/* KPICard */
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.kpi-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.kpi-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.kpi-card-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+.kpi-card-icon.tone-green { background: var(--green-light); }
+.kpi-card-icon.tone-amber { background: var(--amber-light); }
+.kpi-card-icon.tone-red { background: var(--red-light); }
+.kpi-card-icon.tone-blue { background: var(--blue-light); }
+.kpi-card-icon.tone-teal { background: var(--teal-light); }
+.kpi-card-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.kpi-card-sub {
+  font-size: 12px;
+  color: var(--ink3);
+}
+
+/* Cost strip */
+.cost-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  background: var(--ink);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin: var(--space-4) 0;
+}
+.cost-strip-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cost-strip-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.cost-strip-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+}
+.cost-strip-value.positive { color: var(--green2); }
+.cost-strip-value.negative { color: #ea6b5c; }
+
+@media (max-width: 480px) {
+  .cost-strip {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
+/* FlowCard */
+.flow-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.flow-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.flow-card-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+.flow-card-sub {
+  font-size: 12px;
+  color: var(--ink3);
+}
+.flow-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.flow-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.flow-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  background: var(--mist);
+  color: var(--ink3);
+  border: 2px solid var(--border);
+}
+.flow-step.done .flow-step-dot {
+  background: var(--green);
+  color: var(--white);
+  border-color: var(--green);
+}
+.flow-step.active .flow-step-dot {
+  background: var(--amber-light);
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.flow-step-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink3);
+}
+.flow-step.done .flow-step-label,
+.flow-step.active .flow-step-label {
+  color: var(--ink2);
+}
+.flow-connector {
+  flex: 0 0 16px;
+  height: 2px;
+  background: var(--border);
+  margin-bottom: 16px;
+}
+.flow-connector.done {
+  background: var(--green);
+}
+
+/* StatRow */
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+.stat-row-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--mist);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.stat-row-label {
+  font-size: 12px;
+  color: var(--ink3);
+}
+.stat-row-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.stat-row-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* DerivChip */
+.deriv-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--white);
+  border: 1px solid var(--border);
+  min-width: 110px;
+  flex-shrink: 0;
+}
+.deriv-chip-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink3);
+  text-transform: capitalize;
+}
+.deriv-chip-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* StatusChip is styled via .chip classes in components.css */
+
+/* ActionButton */
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--white);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.action-btn:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.action-btn-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.action-btn-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink2);
+  text-align: center;
+}
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+@media (min-width: 769px) {
+  .action-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Install banner */
+.install-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--ink);
+  color: var(--white);
+  box-shadow: var(--shadow-md);
+}
+.install-banner-icon {
+  font-size: 20px;
+}
+.install-banner-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+}
+.install-banner-text strong {
+  font-size: 13px;
+}
+.install-banner-text span {
+  color: rgba(255, 255, 255, 0.7);
+}
+.install-banner-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  cursor: pointer;
+  flex-shrink: 0;
+}
