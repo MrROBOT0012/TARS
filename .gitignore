@@ -12,3 +12,9 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 .claude/
+
+# Machine-local npm shell override (workaround for a Windows path
+# containing "&" breaking cmd.exe script execution) — must never be
+# committed, since it points to a Windows-only bash.exe path that
+# doesn't exist on Linux build servers (breaks Vercel's npm install).
+.npmrc
