@@ -304,7 +304,7 @@ table.data-table tbody tr:hover {
 /* Toast */
 .toast {
   position: fixed;
-  bottom: calc(var(--bottomnav-height) + var(--space-4));
+  bottom: calc(var(--bottomnav-height) + max(8px, env(safe-area-inset-bottom)) + var(--space-4));
   left: 50%;
   transform: translateX(-50%);
   background: var(--ink);

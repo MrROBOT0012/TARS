@@ -171,7 +171,7 @@
 /* ---------- Page content (shared, responsive padding) ---------- */
 .page-content {
   padding: var(--space-4);
-  padding-bottom: calc(var(--bottomnav-height) + var(--space-8));
+  padding-bottom: calc(var(--bottomnav-height) + max(8px, env(safe-area-inset-bottom)) + var(--space-6));
 }
 
 @media (min-width: 769px) {
@@ -186,17 +186,23 @@
 
 /* ---------- Bottom Nav ---------- */
 .bottom-nav {
+  /* content-box (overriding the global border-box reset) keeps the
+     64px icon/label row undiminished — the safe-area inset is added
+     as genuinely extra height below it, not carved out of it, which
+     is what was pushing icons outside the bar on notched iPhones. */
+  box-sizing: content-box;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   height: var(--bottomnav-height);
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
   background: var(--white);
   border-top: 1px solid var(--border);
   display: flex;
   align-items: stretch;
+  overflow: hidden;
   z-index: 40;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 .bottom-nav-item {
   flex: 1;
@@ -205,15 +211,17 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
+  min-width: 0;
   color: var(--ink3);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   background: transparent;
   border: none;
   cursor: pointer;
 }
 .bottom-nav-item .icon {
-  font-size: 20px;
+  font-size: 22px;
+  line-height: 1;
 }
 .bottom-nav-item.active {
   color: var(--green);
@@ -222,7 +230,7 @@
 .fab {
   position: fixed;
   right: var(--space-4);
-  bottom: calc(var(--bottomnav-height) + var(--space-3));
+  bottom: calc(var(--bottomnav-height) + max(8px, env(safe-area-inset-bottom)) + var(--space-3));
   width: 56px;
   height: 56px;
   border-radius: 50%;
