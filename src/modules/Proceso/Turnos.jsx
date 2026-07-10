@@ -6,6 +6,7 @@ import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
 import DerivChip from '../../components/ui/DerivChip.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
 
 const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
@@ -33,13 +34,19 @@ function emptyForm(fincaId) {
 }
 
 export default function Turnos({ autoOpenNew }) {
-  const { selectedCicloId, selectedCiclo, ciclos } = useCiclo()
+  const { selectedCicloId, selectedCiclo, ciclos, error: ciclosError } = useCiclo()
   const cicloFilter = [['ciclo_id', 'eq', selectedCicloId]]
   const enabled = !!selectedCicloId
 
   const { data: basculas } = useTable('basculas', { filters: cicloFilter, enabled })
   const { data: embodegados } = useTable('embodegados', { filters: cicloFilter, enabled })
-  const { data: turnos, loading, refetch } = useTable('turnos_trillo', {
+  const {
+    data: turnos,
+    loading,
+    error: fetchError,
+    stale,
+    refetch
+  } = useTable('turnos_trillo', {
     filters: cicloFilter,
     orderBy: { column: 'fecha', ascending: false },
     enabled
@@ -150,6 +157,9 @@ export default function Turnos({ autoOpenNew }) {
 
   const ticketOf = (id) => basculas.find((b) => b.id === id)?.no_ticket ?? '—'
 
+  if (ciclosError && !ciclos.length) {
+    return <ErrorState error={ciclosError} />
+  }
   if (!ciclos.length) {
     return <div className="empty-state">Crea un ciclo primero.</div>
   }
@@ -170,7 +180,13 @@ export default function Turnos({ autoOpenNew }) {
         <div className="loading-wrap">
           <span className="spinner" />
         </div>
+      ) : fetchError && turnos.length === 0 ? (
+        <ErrorState error={fetchError} onRetry={refetch} />
       ) : (
+        <>
+        {fetchError && stale && (
+          <div className="stale-banner">⚠️ Mostrando datos guardados sin conexión. {fetchError.message}</div>
+        )}
         <ListView
           data={turnos}
           emptyMessage="No hay turnos de trillo en este ciclo"
@@ -202,6 +218,7 @@ export default function Turnos({ autoOpenNew }) {
             </>
           )}
         />
+        </>
       )}
 
       {editing && (

@@ -9,6 +9,7 @@
   padding: 12px 18px;
   font-size: 14px;
   font-weight: 600;
+  letter-spacing: var(--tracking-body);
   cursor: pointer;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
   white-space: nowrap;
@@ -81,8 +82,11 @@
   margin-bottom: var(--space-4);
 }
 .field label {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  line-height: var(--leading-label);
   color: var(--ink3);
 }
 .field input,
@@ -112,6 +116,7 @@
 }
 .field-hint {
   font-size: 12px;
+  font-weight: 300;
   color: var(--ink3);
 }
 .field-error {
@@ -126,7 +131,7 @@
   gap: var(--space-1);
   padding: 5px 12px;
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -180,9 +185,9 @@ table.data-table th {
   background: var(--mist);
   color: var(--ink3);
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tracking-label);
   white-space: nowrap;
 }
 table.data-table td {
@@ -224,12 +229,14 @@ table.data-table tbody tr:hover {
   min-width: 0;
 }
 .list-card-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
+  letter-spacing: var(--tracking-body);
   color: var(--ink);
 }
 .list-card-sub {
   font-size: 12px;
+  font-weight: 300;
   color: var(--ink3);
   margin-top: 2px;
 }
@@ -254,6 +261,24 @@ table.data-table tbody tr:hover {
 .empty-state .icon {
   font-size: 36px;
   margin-bottom: var(--space-2);
+}
+.error-state p {
+  max-width: 420px;
+  margin: 0 auto;
+  color: var(--red);
+}
+
+.stale-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--amber-light);
+  color: var(--amber);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: var(--space-3);
 }
 
 /* Loading */
@@ -301,7 +326,7 @@ table.data-table tbody tr:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: var(--radius-pill);

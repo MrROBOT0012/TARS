@@ -60,7 +60,7 @@
     padding: 11px 14px;
     border-radius: var(--radius-sm);
     color: rgba(255, 255, 255, 0.65);
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 500;
     transition: background var(--transition-fast), color var(--transition-fast);
     cursor: pointer;
@@ -196,7 +196,7 @@
   gap: 3px;
   color: var(--ink3);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -292,8 +292,8 @@
   justify-content: center;
 }
 .drawer-item span {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--ink2);
   text-align: center;
 }

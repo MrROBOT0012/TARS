@@ -16,6 +16,7 @@ import FlowCard from '../../components/ui/FlowCard.jsx'
 import DerivChip from '../../components/ui/DerivChip.jsx'
 import ActionButton from '../../components/ui/ActionButton.jsx'
 import StatRow from '../../components/ui/StatRow.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 import './dashboard.css'
 
 const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
@@ -30,20 +31,21 @@ const QUICK_ACTIONS = [
 ]
 
 export default function Dashboard() {
-  const { selectedCicloId, loading: ciclosLoading, ciclos } = useCiclo()
+  const { selectedCicloId, loading: ciclosLoading, error: ciclosError, ciclos } = useCiclo()
   const navigate = useNavigate()
 
   const enabled = !!selectedCicloId
   const cicloFilter = [['ciclo_id', 'eq', selectedCicloId]]
 
-  const { data: gastos, loading: lg } = useTable('gastos_campo', { filters: cicloFilter, enabled })
-  const { data: basculas, loading: lb } = useTable('basculas', { filters: cicloFilter, enabled })
-  const { data: secados, loading: ls } = useTable('secados', { filters: cicloFilter, enabled })
-  const { data: embodegados, loading: le } = useTable('embodegados', { filters: cicloFilter, enabled })
-  const { data: turnos, loading: lt } = useTable('turnos_trillo', { filters: cicloFilter, enabled })
-  const { data: ventas, loading: lv } = useTable('ventas', { filters: cicloFilter, enabled })
+  const { data: gastos, loading: lg, error: eg } = useTable('gastos_campo', { filters: cicloFilter, enabled })
+  const { data: basculas, loading: lb, error: eb } = useTable('basculas', { filters: cicloFilter, enabled })
+  const { data: secados, loading: ls, error: es } = useTable('secados', { filters: cicloFilter, enabled })
+  const { data: embodegados, loading: le, error: ee } = useTable('embodegados', { filters: cicloFilter, enabled })
+  const { data: turnos, loading: lt, error: et } = useTable('turnos_trillo', { filters: cicloFilter, enabled })
+  const { data: ventas, loading: lv, error: ev } = useTable('ventas', { filters: cicloFilter, enabled })
 
   const loading = ciclosLoading || (enabled && (lg || lb || ls || le || lt || lv))
+  const anyFetchError = eg ?? eb ?? es ?? ee ?? et ?? ev
 
   const resumen = useMemo(() => {
     const gastosCampoTotal = sumar(gastos, 'monto')
@@ -111,6 +113,10 @@ export default function Dashboard() {
       .slice(0, 6)
   }, [basculas, secados, embodegados, turnos])
 
+  if (ciclosError && ciclos.length === 0) {
+    return <ErrorState error={ciclosError} />
+  }
+
   if (!ciclosLoading && ciclos.length === 0) {
     return (
       <div className="empty-state">
@@ -125,6 +131,9 @@ export default function Dashboard() {
 
   return (
     <div className="fade-in">
+      {anyFetchError && (
+        <div className="stale-banner">⚠️ Algunos datos no se pudieron cargar. {anyFetchError.message}</div>
+      )}
       <div className="kpi-grid">
         <KPICard label="Ingresos" value={formatCordoba(resumen.ingresosTotal)} icon="💰" tone="green" />
         <KPICard label="Gastos" value={formatCordoba(resumen.gastosTotal)} icon="📉" tone="red" />

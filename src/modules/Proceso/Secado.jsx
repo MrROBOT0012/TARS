@@ -5,6 +5,7 @@ import { calcularQqSeco, calcularMerma, HUMEDAD_OBJETIVO_ESTANDAR } from '../../
 import { formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
 
 function emptyForm(fincaId) {
@@ -27,12 +28,18 @@ function emptyForm(fincaId) {
 }
 
 export default function Secado({ autoOpenNew }) {
-  const { selectedCicloId, selectedCiclo, ciclos } = useCiclo()
+  const { selectedCicloId, selectedCiclo, ciclos, error: ciclosError } = useCiclo()
   const cicloFilter = [['ciclo_id', 'eq', selectedCicloId]]
   const enabled = !!selectedCicloId
 
   const { data: basculas } = useTable('basculas', { filters: cicloFilter, enabled })
-  const { data: secados, loading, refetch } = useTable('secados', {
+  const {
+    data: secados,
+    loading,
+    error: fetchError,
+    stale,
+    refetch
+  } = useTable('secados', {
     filters: cicloFilter,
     orderBy: { column: 'fecha', ascending: false },
     enabled
@@ -134,6 +141,9 @@ export default function Secado({ autoOpenNew }) {
 
   const ticketOf = (id) => basculas.find((b) => b.id === id)?.no_ticket ?? '—'
 
+  if (ciclosError && !ciclos.length) {
+    return <ErrorState error={ciclosError} />
+  }
   if (!ciclos.length) {
     return <div className="empty-state">Crea un ciclo primero.</div>
   }
@@ -154,7 +164,13 @@ export default function Secado({ autoOpenNew }) {
         <div className="loading-wrap">
           <span className="spinner" />
         </div>
+      ) : fetchError && secados.length === 0 ? (
+        <ErrorState error={fetchError} onRetry={refetch} />
       ) : (
+        <>
+        {fetchError && stale && (
+          <div className="stale-banner">⚠️ Mostrando datos guardados sin conexión. {fetchError.message}</div>
+        )}
         <ListView
           data={secados}
           emptyMessage="No hay registros de secado en este ciclo"
@@ -190,6 +206,7 @@ export default function Secado({ autoOpenNew }) {
             </>
           )}
         />
+        </>
       )}
 
       {editing && (

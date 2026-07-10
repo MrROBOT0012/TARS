@@ -4,6 +4,7 @@ import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
 
 const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
@@ -30,11 +31,13 @@ function emptyForm(fincaId) {
 export default function Ventas() {
   const [searchParams] = useSearchParams()
   const autoOpenNew = searchParams.get('new') === '1'
-  const { selectedCicloId, selectedCiclo, ciclos } = useCiclo()
+  const { selectedCicloId, selectedCiclo, ciclos, error: ciclosError } = useCiclo()
   const { data: fincas } = useTable('fincas', { orderBy: { column: 'nombre' } })
   const {
     data: ventas,
     loading,
+    error: fetchError,
+    stale,
     refetch
   } = useTable('ventas', {
     filters: [['ciclo_id', 'eq', selectedCicloId]],
@@ -111,6 +114,9 @@ export default function Ventas() {
     [ventas]
   )
 
+  if (ciclosError && !ciclos.length) {
+    return <ErrorState error={ciclosError} />
+  }
   if (!ciclos.length) {
     return <div className="empty-state">Crea un ciclo primero para registrar ventas.</div>
   }
@@ -131,7 +137,13 @@ export default function Ventas() {
         <div className="loading-wrap">
           <span className="spinner" />
         </div>
+      ) : fetchError && ventas.length === 0 ? (
+        <ErrorState error={fetchError} onRetry={refetch} />
       ) : (
+        <>
+        {fetchError && stale && (
+          <div className="stale-banner">⚠️ Mostrando datos guardados sin conexión. {fetchError.message}</div>
+        )}
         <ListView
           data={ventas}
           emptyMessage="No hay ventas registradas en este ciclo"
@@ -165,6 +177,7 @@ export default function Ventas() {
             </>
           )}
         />
+        </>
       )}
 
       {editing && (

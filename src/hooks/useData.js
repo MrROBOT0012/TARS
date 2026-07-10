@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const CACHE_PREFIX = 'tars_cache_'
+const QUERY_TIMEOUT_MS = 10000
 
 function readCache(key) {
   try {
@@ -20,11 +21,28 @@ function writeCache(key, data) {
   }
 }
 
+function friendlyError(err) {
+  if (err?.name === 'AbortError') {
+    return 'La consulta tardó demasiado (más de 10s). Verifica tu conexión o los permisos (RLS) de la tabla en Supabase.'
+  }
+  if (err?.code === 'PGRST301' || err?.code === '42501' || /permission denied|RLS/i.test(err?.message ?? '')) {
+    return `Acceso denegado por Supabase (RLS). Revisa las políticas de la tabla. (${err.message})`
+  }
+  return err?.message ?? 'Error desconocido al consultar la base de datos.'
+}
+
 /**
  * Fetch rows from a Supabase table with in-memory + localStorage caching
  * so the last successful result is available offline.
  *
  * filters: array of [column, operator, value] tuples, e.g. [['ciclo_id', 'eq', 5]]
+ *
+ * `filters` and `orderBy` are read through refs updated every render but kept
+ * out of the fetchData dependency array — the caller usually passes fresh
+ * object/array literals each render, and including them directly here would
+ * recreate fetchData (and therefore its effect) every render, causing a
+ * refetch loop that never lets `loading` settle. `cacheKey` (a stable string
+ * derived from their content) is what actually drives refetching.
  */
 export function useTable(table, { select = '*', filters = [], orderBy = null, enabled = true } = {}) {
   const cacheKey = `${table}:${JSON.stringify({ select, filters, orderBy })}`
@@ -34,18 +52,24 @@ export function useTable(table, { select = '*', filters = [], orderBy = null, en
   const [stale, setStale] = useState(false)
   const filtersRef = useRef(filters)
   filtersRef.current = filters
+  const orderByRef = useRef(orderBy)
+  orderByRef.current = orderBy
 
   const fetchData = useCallback(async () => {
     if (!enabled) return
     setLoading(true)
     setError(null)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), QUERY_TIMEOUT_MS)
+
     try {
-      let query = supabase.from(table).select(select)
+      let query = supabase.from(table).select(select).abortSignal(controller.signal)
       for (const [column, op, value] of filtersRef.current) {
         query = query[op](column, value)
       }
-      if (orderBy) {
-        query = query.order(orderBy.column, { ascending: orderBy.ascending ?? true })
+      if (orderByRef.current) {
+        query = query.order(orderByRef.current.column, { ascending: orderByRef.current.ascending ?? true })
       }
       const { data: rows, error: err } = await query
       if (err) throw err
@@ -53,16 +77,17 @@ export function useTable(table, { select = '*', filters = [], orderBy = null, en
       writeCache(cacheKey, rows ?? [])
       setStale(false)
     } catch (err) {
-      setError(err)
+      setError({ message: friendlyError(err) })
       const cached = readCache(cacheKey)
       if (cached) {
         setData(cached)
         setStale(true)
       }
     } finally {
+      clearTimeout(timeoutId)
       setLoading(false)
     }
-  }, [table, select, orderBy, cacheKey, enabled])
+  }, [table, select, cacheKey, enabled])
 
   useEffect(() => {
     fetchData()

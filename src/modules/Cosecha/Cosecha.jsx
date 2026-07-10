@@ -3,6 +3,7 @@ import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { formatQq, formatPercent, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
 
 function emptyForm(fincaId) {
@@ -10,11 +11,13 @@ function emptyForm(fincaId) {
 }
 
 export default function Cosecha() {
-  const { selectedCicloId, selectedCiclo, ciclos } = useCiclo()
+  const { selectedCicloId, selectedCiclo, ciclos, error: ciclosError } = useCiclo()
   const { data: fincas } = useTable('fincas', { orderBy: { column: 'nombre' } })
   const {
     data: cosechas,
     loading,
+    error: fetchError,
+    stale,
     refetch
   } = useTable('cosechas', {
     filters: [['ciclo_id', 'eq', selectedCicloId]],
@@ -78,6 +81,9 @@ export default function Cosecha() {
 
   const fincaNombre = (id) => fincas.find((f) => f.id === id)?.nombre ?? '—'
 
+  if (ciclosError && !ciclos.length) {
+    return <ErrorState error={ciclosError} />
+  }
   if (!ciclos.length) {
     return <div className="empty-state">Crea un ciclo primero para registrar cosechas.</div>
   }
@@ -98,7 +104,13 @@ export default function Cosecha() {
         <div className="loading-wrap">
           <span className="spinner" />
         </div>
+      ) : fetchError && cosechas.length === 0 ? (
+        <ErrorState error={fetchError} onRetry={refetch} />
       ) : (
+        <>
+        {fetchError && stale && (
+          <div className="stale-banner">⚠️ Mostrando datos guardados sin conexión. {fetchError.message}</div>
+        )}
         <ListView
           data={cosechas}
           emptyMessage="No hay cosechas registradas en este ciclo"
@@ -128,6 +140,7 @@ export default function Cosecha() {
             </>
           )}
         />
+        </>
       )}
 
       {editing && (

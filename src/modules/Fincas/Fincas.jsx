@@ -2,12 +2,19 @@ import { useState } from 'react'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { formatNumber } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
 
 const EMPTY_FORM = { nombre: '', tipo: '', manzanas: '', notas: '' }
 
 export default function Fincas() {
-  const { data: fincas, loading, refetch } = useTable('fincas', { orderBy: { column: 'nombre' } })
+  const {
+    data: fincas,
+    loading,
+    error: fetchError,
+    stale,
+    refetch
+  } = useTable('fincas', { orderBy: { column: 'nombre' } })
 
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
@@ -73,7 +80,13 @@ export default function Fincas() {
         <div className="loading-wrap">
           <span className="spinner" />
         </div>
+      ) : fetchError && fincas.length === 0 ? (
+        <ErrorState error={fetchError} onRetry={refetch} />
       ) : (
+        <>
+        {fetchError && stale && (
+          <div className="stale-banner">⚠️ Mostrando datos guardados sin conexión. {fetchError.message}</div>
+        )}
         <ListView
           data={fincas}
           emptyMessage="No hay fincas registradas"
@@ -102,6 +115,7 @@ export default function Fincas() {
             </>
           )}
         />
+        </>
       )}
 
       {editing && (

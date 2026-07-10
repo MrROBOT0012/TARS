@@ -12,7 +12,10 @@ body {
 }
 
 body {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
   background: var(--mist);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
@@ -30,6 +33,15 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0;
   color: var(--ink);
   font-weight: 700;
+  letter-spacing: var(--tracking-headline);
+  line-height: var(--leading-headline);
+}
+
+/* Subheadings (form/modal titles, card titles) sit one tier below
+   module headlines: same family, lighter weight, body-like tracking. */
+h3 {
+  font-weight: 600;
+  letter-spacing: var(--tracking-body);
 }
 
 p {
@@ -61,6 +73,7 @@ ul, ol {
 .mono {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-mono);
 }
 
 .scroll-x {

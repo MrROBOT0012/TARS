@@ -4,13 +4,20 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { formatDate, formatDateInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
 
 const EMPTY_FORM = { nombre: '', finca_id: '', inicio: '', fin: '', estado: 'activo', notas: '' }
 
 export default function Ciclos() {
   const { data: fincas } = useTable('fincas', { orderBy: { column: 'nombre' } })
-  const { data: ciclos, loading, refetch } = useTable('ciclos', { orderBy: { column: 'inicio', ascending: false } })
+  const {
+    data: ciclos,
+    loading,
+    error: fetchError,
+    stale,
+    refetch
+  } = useTable('ciclos', { orderBy: { column: 'inicio', ascending: false } })
   const { refetch: refetchCiclosGlobal } = useCiclo()
 
   const [editing, setEditing] = useState(null)
@@ -85,7 +92,13 @@ export default function Ciclos() {
         <div className="loading-wrap">
           <span className="spinner" />
         </div>
+      ) : fetchError && ciclos.length === 0 ? (
+        <ErrorState error={fetchError} onRetry={refetch} />
       ) : (
+        <>
+        {fetchError && stale && (
+          <div className="stale-banner">⚠️ Mostrando datos guardados sin conexión. {fetchError.message}</div>
+        )}
         <ListView
           data={ciclos}
           emptyMessage="No hay ciclos registrados"
@@ -118,6 +131,7 @@ export default function Ciclos() {
             </>
           )}
         />
+        </>
       )}
 
       {editing && (

@@ -42,6 +42,7 @@
   text-align: center;
   color: var(--ink3);
   font-size: 13px;
+  font-weight: 300;
   margin-top: var(--space-2);
   margin-bottom: var(--space-6);
 }
@@ -54,5 +55,6 @@
   margin-top: var(--space-6);
   color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
+  font-weight: 300;
   text-align: center;
 }

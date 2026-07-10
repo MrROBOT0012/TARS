@@ -4,6 +4,7 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
 
 function emptyForm(fincaId) {
@@ -36,11 +37,13 @@ function calcQqNeto(pesoBruto, tara) {
 }
 
 export default function Bascula() {
-  const { selectedCicloId, selectedCiclo, ciclos } = useCiclo()
+  const { selectedCicloId, selectedCiclo, ciclos, error: ciclosError } = useCiclo()
   const { data: fincas } = useTable('fincas', { orderBy: { column: 'nombre' } })
   const {
     data: basculas,
     loading,
+    error: fetchError,
+    stale,
     refetch
   } = useTable('basculas', {
     filters: [['ciclo_id', 'eq', selectedCicloId]],
@@ -141,6 +144,9 @@ export default function Bascula() {
 
   const totalQq = useMemo(() => basculas.reduce((sum, b) => sum + (Number(b.qq_neto) || 0), 0), [basculas])
 
+  if (ciclosError && !ciclos.length) {
+    return <ErrorState error={ciclosError} />
+  }
   if (!ciclos.length) {
     return <div className="empty-state">Crea un ciclo primero para registrar viajes de báscula.</div>
   }
@@ -161,7 +167,13 @@ export default function Bascula() {
         <div className="loading-wrap">
           <span className="spinner" />
         </div>
+      ) : fetchError && basculas.length === 0 ? (
+        <ErrorState error={fetchError} onRetry={refetch} />
       ) : (
+        <>
+        {fetchError && stale && (
+          <div className="stale-banner">⚠️ Mostrando datos guardados sin conexión. {fetchError.message}</div>
+        )}
         <ListView
           data={basculas}
           emptyMessage="No hay viajes registrados en este ciclo"
@@ -198,6 +210,7 @@ export default function Bascula() {
             </>
           )}
         />
+        </>
       )}
 
       {editing && (

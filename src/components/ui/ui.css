@@ -10,11 +10,11 @@
   justify-content: space-between;
 }
 .kpi-card-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--ink3);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: var(--tracking-label);
 }
 .kpi-card-icon {
   width: 30px;
@@ -37,6 +37,7 @@
 }
 .kpi-card-sub {
   font-size: 12px;
+  font-weight: 300;
   color: var(--ink3);
 }
 
@@ -60,7 +61,7 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: var(--tracking-label);
 }
 .cost-strip-value {
   font-size: 18px;
@@ -89,11 +90,13 @@
   justify-content: space-between;
 }
 .flow-card-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
+  letter-spacing: var(--tracking-body);
 }
 .flow-card-sub {
   font-size: 12px;
+  font-weight: 300;
   color: var(--ink3);
 }
 .flow-steps {
@@ -170,6 +173,7 @@
 }
 .stat-row-label {
   font-size: 12px;
+  font-weight: 300;
   color: var(--ink3);
 }
 .stat-row-value {
@@ -282,6 +286,7 @@
 }
 .install-banner-text strong {
   font-size: 13px;
+  font-weight: 600;
 }
 .install-banner-text span {
   color: rgba(255, 255, 255, 0.7);

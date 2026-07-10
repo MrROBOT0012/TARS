@@ -12,6 +12,7 @@ import {
 import { formatCordoba, formatQq, formatPercent } from '../../lib/formatters'
 import KPICard from '../../components/ui/KPICard.jsx'
 import StatRow from '../../components/ui/StatRow.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 
 const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
 const DERIVADOS_LABELS = {
@@ -23,19 +24,20 @@ const DERIVADOS_LABELS = {
 }
 
 export default function Reportes() {
-  const { selectedCicloId, selectedCiclo, ciclos, loading: ciclosLoading } = useCiclo()
+  const { selectedCicloId, selectedCiclo, ciclos, loading: ciclosLoading, error: ciclosError } = useCiclo()
   const enabled = !!selectedCicloId
   const cicloFilter = [['ciclo_id', 'eq', selectedCicloId]]
 
-  const { data: cosechas, loading: lc } = useTable('cosechas', { filters: cicloFilter, enabled })
-  const { data: gastos, loading: lg } = useTable('gastos_campo', { filters: cicloFilter, enabled })
-  const { data: basculas, loading: lb } = useTable('basculas', { filters: cicloFilter, enabled })
-  const { data: secados, loading: ls } = useTable('secados', { filters: cicloFilter, enabled })
-  const { data: embodegados, loading: le } = useTable('embodegados', { filters: cicloFilter, enabled })
-  const { data: turnos, loading: lt } = useTable('turnos_trillo', { filters: cicloFilter, enabled })
-  const { data: ventas, loading: lv } = useTable('ventas', { filters: cicloFilter, enabled })
+  const { data: cosechas, loading: lc, error: ec } = useTable('cosechas', { filters: cicloFilter, enabled })
+  const { data: gastos, loading: lg, error: eg } = useTable('gastos_campo', { filters: cicloFilter, enabled })
+  const { data: basculas, loading: lb, error: eb } = useTable('basculas', { filters: cicloFilter, enabled })
+  const { data: secados, loading: ls, error: es } = useTable('secados', { filters: cicloFilter, enabled })
+  const { data: embodegados, loading: le, error: ee } = useTable('embodegados', { filters: cicloFilter, enabled })
+  const { data: turnos, loading: lt, error: et } = useTable('turnos_trillo', { filters: cicloFilter, enabled })
+  const { data: ventas, loading: lv, error: ev } = useTable('ventas', { filters: cicloFilter, enabled })
 
   const loading = ciclosLoading || (enabled && (lc || lg || lb || ls || le || lt || lv))
+  const anyFetchError = ec ?? eg ?? eb ?? es ?? ee ?? et ?? ev
 
   const report = useMemo(() => {
     const gastosCampoTotal = sumar(gastos, 'monto')
@@ -108,6 +110,9 @@ export default function Reportes() {
     }
   }, [cosechas, gastos, basculas, secados, embodegados, turnos, ventas])
 
+  if (ciclosError && ciclos.length === 0) {
+    return <ErrorState error={ciclosError} />
+  }
   if (!ciclosLoading && ciclos.length === 0) {
     return <div className="empty-state">No hay ciclos creados todavía.</div>
   }
@@ -124,6 +129,9 @@ export default function Reportes() {
 
   return (
     <div className="fade-in">
+      {anyFetchError && (
+        <div className="stale-banner">⚠️ Algunos datos no se pudieron cargar. {anyFetchError.message}</div>
+      )}
       <div className="section-header">
         <h2>Reporte &middot; {selectedCiclo?.nombre}</h2>
       </div>
