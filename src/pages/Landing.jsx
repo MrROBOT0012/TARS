@@ -164,9 +164,12 @@ export default function Landing() {
             Una plataforma completa para toda la operación
           </h2>
 
-          <div className="landing-dashboard-placeholder">
-            <IconChart />
-            <span>[ captura del dashboard TARS ]</span>
+          <div className="landing-dashboard-embed">
+            <iframe
+              src="/demo/tars-demo.html"
+              title="TARS Demo"
+              loading="lazy"
+            />
           </div>
 
           <div className="landing-grid landing-grid-3">
@@ -323,13 +326,6 @@ function IconBars() {
   return (
     <svg {...iconProps} stroke="#1A6B42">
       <line x1="4" y1="20" x2="20" y2="20" /><rect x="6" y="12" width="3" height="8" /><rect x="11" y="7" width="3" height="13" /><rect x="16" y="3" width="3" height="17" />
-    </svg>
-  )
-}
-function IconChart() {
-  return (
-    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1A6B42" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="13" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
     </svg>
   )
 }
