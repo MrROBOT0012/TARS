@@ -3,11 +3,13 @@ import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
+import { useOnboarding } from '../../hooks/useOnboarding.jsx'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
+import OnboardingStepBanner from '../../components/ui/OnboardingStepBanner.jsx'
 
 function emptyForm(fincaId) {
   return {
@@ -55,6 +57,7 @@ export default function Bascula() {
 
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
+  const { markStepDone } = useOnboarding()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -130,6 +133,7 @@ export default function Bascula() {
         await updateRow('basculas', editing, values)
       }
       showSuccess('Ticket registrado correctamente')
+      markStepDone('bascula')
       setEditing(null)
       await refetch()
     } catch (err) {
@@ -166,6 +170,7 @@ export default function Bascula() {
 
   return (
     <div className="fade-in">
+      <OnboardingStepBanner step="bascula" />
       <div className="section-header">
         <h2>Báscula &middot; {formatQq(totalQq, 1)} total</h2>
         <button className="btn btn-primary btn-sm" onClick={openNew}>

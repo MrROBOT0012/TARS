@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import { ToastProvider } from './hooks/useToast.jsx'
 import { CicloProvider } from './hooks/useCiclo.jsx'
+import { OnboardingProvider } from './hooks/useOnboarding.jsx'
 import Login from './modules/Auth/Login.jsx'
 import AppLayout from './components/layout/AppLayout.jsx'
 import Dashboard from './modules/Dashboard/Dashboard.jsx'
@@ -29,22 +30,24 @@ function Gate() {
 
   return (
     <CicloProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/ciclos" element={<Ciclos />} />
-            <Route path="/fincas" element={<Fincas />} />
-            <Route path="/campo" element={<Campo />} />
-            <Route path="/cosecha" element={<Cosecha />} />
-            <Route path="/bascula" element={<Bascula />} />
-            <Route path="/proceso" element={<Proceso />} />
-            <Route path="/ventas" element={<Ventas />} />
-            <Route path="/reportes" element={<Reportes />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <OnboardingProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/ciclos" element={<Ciclos />} />
+              <Route path="/fincas" element={<Fincas />} />
+              <Route path="/campo" element={<Campo />} />
+              <Route path="/cosecha" element={<Cosecha />} />
+              <Route path="/bascula" element={<Bascula />} />
+              <Route path="/proceso" element={<Proceso />} />
+              <Route path="/ventas" element={<Ventas />} />
+              <Route path="/reportes" element={<Reportes />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </OnboardingProvider>
     </CicloProvider>
   )
 }

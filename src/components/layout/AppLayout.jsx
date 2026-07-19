@@ -7,6 +7,7 @@ import { NAV_ITEMS } from '../../lib/navConfig'
 import { useState } from 'react'
 import QuickActionSheet from '../ui/QuickActionSheet.jsx'
 import InstallBanner from '../ui/InstallBanner.jsx'
+import OnboardingPill from '../ui/OnboardingPill.jsx'
 
 export default function AppLayout() {
   const location = useLocation()
@@ -28,6 +29,7 @@ export default function AppLayout() {
           </main>
         </div>
         <BottomNav onQuickAction={() => setQuickActionOpen(true)} />
+        <OnboardingPill />
         {quickActionOpen && (
           <QuickActionSheet
             onClose={() => setQuickActionOpen(false)}

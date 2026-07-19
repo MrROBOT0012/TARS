@@ -15,14 +15,14 @@ export function ToastProvider({ children }) {
     delete timersRef.current[id]
   }, [])
 
-  const show = useCallback((message, type) => {
+  const show = useCallback((message, type, { duration = DISMISS_MS, celebration = false } = {}) => {
     const id = nextToastId++
-    setToasts((prev) => [...prev, { id, message, type }])
-    timersRef.current[id] = setTimeout(() => dismiss(id), DISMISS_MS)
+    setToasts((prev) => [...prev, { id, message, type, celebration }])
+    timersRef.current[id] = setTimeout(() => dismiss(id), duration)
   }, [dismiss])
 
-  const showSuccess = useCallback((message) => show(message, 'success'), [show])
-  const showError = useCallback((message) => show(message, 'error'), [show])
+  const showSuccess = useCallback((message, options) => show(message, 'success', options), [show])
+  const showError = useCallback((message, options) => show(message, 'error', options), [show])
 
   return (
     <ToastContext.Provider value={{ showSuccess, showError }}>
@@ -31,7 +31,7 @@ export function ToastProvider({ children }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={'toast toast-' + t.type}
+            className={'toast toast-' + t.type + (t.celebration ? ' toast-celebration' : '')}
             role="status"
             onClick={() => dismiss(t.id)}
           >

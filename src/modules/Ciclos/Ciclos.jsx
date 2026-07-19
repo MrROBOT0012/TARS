@@ -3,11 +3,13 @@ import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
+import { useOnboarding } from '../../hooks/useOnboarding.jsx'
 import { formatDate, formatDateInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
+import OnboardingStepBanner from '../../components/ui/OnboardingStepBanner.jsx'
 
 const EMPTY_FORM = { nombre: '', finca_id: '', inicio: '', fin: '', estado: 'activo', notas: '' }
 
@@ -23,6 +25,7 @@ export default function Ciclos() {
   const { refetch: refetchCiclosGlobal } = useCiclo()
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
+  const { markStepDone } = useOnboarding()
 
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
@@ -65,6 +68,7 @@ export default function Ciclos() {
         await updateRow('ciclos', editing, values)
       }
       showSuccess('Ciclo guardado')
+      markStepDone('ciclo')
       setEditing(null)
       await refetch()
       await refetchCiclosGlobal()
@@ -91,6 +95,7 @@ export default function Ciclos() {
 
   return (
     <div className="fade-in">
+      <OnboardingStepBanner step="ciclo" />
       <div className="section-header">
         <h2>Ciclos</h2>
         <button className="btn btn-primary btn-sm" onClick={openNew}>
