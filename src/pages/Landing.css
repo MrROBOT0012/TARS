@@ -56,9 +56,9 @@
 
 /* Hero */
 .landing-hero {
-  position: relative; background: var(--ink); min-height: 92vh;
+  position: relative; background: var(--ink); min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
-  padding: 160px 80px 120px;
+  padding: 0 80px;
 }
 .landing-hero-bg {
   position: absolute; inset: 0;
@@ -194,7 +194,7 @@
   .landing-logo { height: 32px; }
   .landing-nav-actions { display: none; }
   .landing-burger { display: flex; }
-  .landing-hero { padding: 140px 20px 80px; min-height: auto; }
+  .landing-hero { padding: 0 20px; min-height: 100vh; }
   .landing-hero-content h1 { font-size: 34px; }
   .landing-hero-content p { font-size: 17px; }
   .landing-hero-cta { flex-direction: column; width: 100%; margin-top: 32px; }
