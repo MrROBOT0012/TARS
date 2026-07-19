@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
+import { useToast } from '../../hooks/useToast.jsx'
+import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
@@ -45,6 +47,8 @@ export default function Ventas() {
     enabled: !!selectedCicloId
   })
 
+  const { showSuccess } = useToast()
+  const handleApiError = useErrorHandler()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -93,10 +97,11 @@ export default function Ventas() {
       } else {
         await updateRow('ventas', editing, values)
       }
+      showSuccess('Venta registrada')
       setEditing(null)
       await refetch()
     } catch (err) {
-      setError(err.message)
+      setError(handleApiError(err))
     } finally {
       setSaving(false)
     }
@@ -104,8 +109,13 @@ export default function Ventas() {
 
   async function handleDelete(row) {
     if (!confirm('¿Eliminar este registro de venta?')) return
-    await deleteRow('ventas', row.id)
-    await refetch()
+    try {
+      await deleteRow('ventas', row.id)
+      showSuccess('Venta eliminada')
+      await refetch()
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
   const fincaNombre = (id) => fincas.find((f) => f.id === id)?.nombre ?? '—'

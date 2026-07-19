@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
+import { useToast } from '../../hooks/useToast.jsx'
+import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { formatNumber } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
@@ -16,6 +18,8 @@ export default function Fincas() {
     refetch
   } = useTable('fincas', { orderBy: { column: 'nombre' } })
 
+  const { showSuccess } = useToast()
+  const handleApiError = useErrorHandler()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
@@ -49,13 +53,15 @@ export default function Fincas() {
       }
       if (editing === 'new') {
         await insertRow('fincas', values)
+        showSuccess('Finca creada')
       } else {
         await updateRow('fincas', editing, values)
+        showSuccess('Finca actualizada')
       }
       setEditing(null)
       await refetch()
     } catch (err) {
-      setError(err.message)
+      setError(handleApiError(err))
     } finally {
       setSaving(false)
     }
@@ -63,8 +69,13 @@ export default function Fincas() {
 
   async function handleDelete(row) {
     if (!confirm(`¿Eliminar la finca "${row.nombre}"?`)) return
-    await deleteRow('fincas', row.id)
-    await refetch()
+    try {
+      await deleteRow('fincas', row.id)
+      showSuccess('Finca eliminada')
+      await refetch()
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
   return (

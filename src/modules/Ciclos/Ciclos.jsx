@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
+import { useToast } from '../../hooks/useToast.jsx'
+import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { formatDate, formatDateInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
@@ -19,6 +21,8 @@ export default function Ciclos() {
     refetch
   } = useTable('ciclos', { orderBy: { column: 'inicio', ascending: false } })
   const { refetch: refetchCiclosGlobal } = useCiclo()
+  const { showSuccess } = useToast()
+  const handleApiError = useErrorHandler()
 
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
@@ -60,11 +64,12 @@ export default function Ciclos() {
       } else {
         await updateRow('ciclos', editing, values)
       }
+      showSuccess('Ciclo guardado')
       setEditing(null)
       await refetch()
       await refetchCiclosGlobal()
     } catch (err) {
-      setError(err.message)
+      setError(handleApiError(err))
     } finally {
       setSaving(false)
     }
@@ -72,9 +77,14 @@ export default function Ciclos() {
 
   async function handleDelete(row) {
     if (!confirm(`¿Eliminar el ciclo "${row.nombre}"?`)) return
-    await deleteRow('ciclos', row.id)
-    await refetch()
-    await refetchCiclosGlobal()
+    try {
+      await deleteRow('ciclos', row.id)
+      showSuccess('Ciclo eliminado')
+      await refetch()
+      await refetchCiclosGlobal()
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
   const fincaNombre = (id) => fincas.find((f) => f.id === id)?.nombre ?? '—'

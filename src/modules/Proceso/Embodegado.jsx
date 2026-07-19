@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
+import { useToast } from '../../hooks/useToast.jsx'
+import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
@@ -39,6 +41,8 @@ export default function Embodegado({ autoOpenNew }) {
     enabled
   })
 
+  const { showSuccess } = useToast()
+  const handleApiError = useErrorHandler()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -102,10 +106,11 @@ export default function Embodegado({ autoOpenNew }) {
       } else {
         await updateRow('embodegados', editing, values)
       }
+      showSuccess('Embodegado guardado')
       setEditing(null)
       await refetch()
     } catch (err) {
-      setError(err.message)
+      setError(handleApiError(err))
     } finally {
       setSaving(false)
     }
@@ -113,8 +118,13 @@ export default function Embodegado({ autoOpenNew }) {
 
   async function handleDelete(row) {
     if (!confirm('¿Eliminar este registro de embodegado?')) return
-    await deleteRow('embodegados', row.id)
-    await refetch()
+    try {
+      await deleteRow('embodegados', row.id)
+      showSuccess('Embodegado eliminado')
+      await refetch()
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
   const ticketOf = (id) => basculas.find((b) => b.id === id)?.no_ticket ?? '—'

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
+import { useToast } from '../../hooks/useToast.jsx'
+import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { formatCordoba, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
@@ -27,6 +29,8 @@ export default function Campo() {
     enabled: !!selectedCicloId
   })
 
+  const { showSuccess } = useToast()
+  const handleApiError = useErrorHandler()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -68,10 +72,11 @@ export default function Campo() {
       } else {
         await updateRow('gastos_campo', editing, values)
       }
+      showSuccess('Gasto guardado')
       setEditing(null)
       await refetch()
     } catch (err) {
-      setError(err.message)
+      setError(handleApiError(err))
     } finally {
       setSaving(false)
     }
@@ -79,8 +84,13 @@ export default function Campo() {
 
   async function handleDelete(row) {
     if (!confirm('¿Eliminar este gasto de campo?')) return
-    await deleteRow('gastos_campo', row.id)
-    await refetch()
+    try {
+      await deleteRow('gastos_campo', row.id)
+      showSuccess('Gasto eliminado')
+      await refetch()
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
   const fincaNombre = (id) => fincas.find((f) => f.id === id)?.nombre ?? '—'

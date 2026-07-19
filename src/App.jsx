@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
+import { ToastProvider } from './hooks/useToast.jsx'
 import { CicloProvider } from './hooks/useCiclo.jsx'
 import Login from './modules/Auth/Login.jsx'
 import AppLayout from './components/layout/AppLayout.jsx'
@@ -50,8 +51,10 @@ function Gate() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Gate />
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <Gate />
+      </AuthProvider>
+    </ToastProvider>
   )
 }

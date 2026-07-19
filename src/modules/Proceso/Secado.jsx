@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
+import { useToast } from '../../hooks/useToast.jsx'
+import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { calcularQqSeco, calcularMerma, HUMEDAD_OBJETIVO_ESTANDAR } from '../../lib/formulas'
 import { formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
@@ -45,6 +47,8 @@ export default function Secado({ autoOpenNew }) {
     enabled
   })
 
+  const { showSuccess } = useToast()
+  const handleApiError = useErrorHandler()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -124,10 +128,11 @@ export default function Secado({ autoOpenNew }) {
       } else {
         await updateRow('secados', editing, values)
       }
+      showSuccess('Secado guardado')
       setEditing(null)
       await refetch()
     } catch (err) {
-      setError(err.message)
+      setError(handleApiError(err))
     } finally {
       setSaving(false)
     }
@@ -135,8 +140,13 @@ export default function Secado({ autoOpenNew }) {
 
   async function handleDelete(row) {
     if (!confirm('¿Eliminar este registro de secado?')) return
-    await deleteRow('secados', row.id)
-    await refetch()
+    try {
+      await deleteRow('secados', row.id)
+      showSuccess('Secado eliminado')
+      await refetch()
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
   const ticketOf = (id) => basculas.find((b) => b.id === id)?.no_ticket ?? '—'

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
+import { useToast } from '../../hooks/useToast.jsx'
+import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { formatQq, formatPercent, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
@@ -25,6 +27,8 @@ export default function Cosecha() {
     enabled: !!selectedCicloId
   })
 
+  const { showSuccess } = useToast()
+  const handleApiError = useErrorHandler()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -64,10 +68,11 @@ export default function Cosecha() {
       } else {
         await updateRow('cosechas', editing, values)
       }
+      showSuccess('Cosecha guardada')
       setEditing(null)
       await refetch()
     } catch (err) {
-      setError(err.message)
+      setError(handleApiError(err))
     } finally {
       setSaving(false)
     }
@@ -75,8 +80,13 @@ export default function Cosecha() {
 
   async function handleDelete(row) {
     if (!confirm('¿Eliminar este registro de cosecha?')) return
-    await deleteRow('cosechas', row.id)
-    await refetch()
+    try {
+      await deleteRow('cosechas', row.id)
+      showSuccess('Cosecha eliminada')
+      await refetch()
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
   const fincaNombre = (id) => fincas.find((f) => f.id === id)?.nombre ?? '—'

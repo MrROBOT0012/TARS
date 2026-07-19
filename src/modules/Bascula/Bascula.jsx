@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
+import { useToast } from '../../hooks/useToast.jsx'
+import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
@@ -51,6 +53,8 @@ export default function Bascula() {
     enabled: !!selectedCicloId
   })
 
+  const { showSuccess } = useToast()
+  const handleApiError = useErrorHandler()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -125,10 +129,11 @@ export default function Bascula() {
       } else {
         await updateRow('basculas', editing, values)
       }
+      showSuccess('Ticket registrado correctamente')
       setEditing(null)
       await refetch()
     } catch (err) {
-      setError(err.message)
+      setError(handleApiError(err))
     } finally {
       setSaving(false)
     }
@@ -136,8 +141,13 @@ export default function Bascula() {
 
   async function handleDelete(row) {
     if (!confirm(`¿Eliminar el viaje #${row.no_ticket}?`)) return
-    await deleteRow('basculas', row.id)
-    await refetch()
+    try {
+      await deleteRow('basculas', row.id)
+      showSuccess('Ticket eliminado')
+      await refetch()
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
   const fincaNombre = (id) => fincas.find((f) => f.id === id)?.nombre ?? '—'

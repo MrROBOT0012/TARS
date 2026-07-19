@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getFriendlyErrorMessage } from '../lib/errorHandler'
 
 const CicloContext = createContext(null)
 const STORAGE_KEY = 'tars_selected_ciclo_id'
@@ -33,11 +34,7 @@ export function CicloProvider({ children }) {
         return activo ? activo.id : null
       })
     } catch (err) {
-      const message =
-        err?.name === 'AbortError'
-          ? 'La consulta de ciclos tardó demasiado (más de 10s). Verifica tu conexión o los permisos (RLS) de la tabla "ciclos".'
-          : err?.message ?? 'Error desconocido al consultar ciclos.'
-      setError({ message })
+      setError({ message: getFriendlyErrorMessage(err) })
     } finally {
       clearTimeout(timeoutId)
       setLoading(false)

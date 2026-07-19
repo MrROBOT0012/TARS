@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { getFriendlyErrorMessage } from '../lib/errorHandler'
 
 const CACHE_PREFIX = 'tars_cache_'
 const QUERY_TIMEOUT_MS = 10000
@@ -19,16 +20,6 @@ function writeCache(key, data) {
   } catch {
     /* storage full or unavailable, ignore */
   }
-}
-
-function friendlyError(err) {
-  if (err?.name === 'AbortError') {
-    return 'La consulta tardó demasiado (más de 10s). Verifica tu conexión o los permisos (RLS) de la tabla en Supabase.'
-  }
-  if (err?.code === 'PGRST301' || err?.code === '42501' || /permission denied|RLS/i.test(err?.message ?? '')) {
-    return `Acceso denegado por Supabase (RLS). Revisa las políticas de la tabla. (${err.message})`
-  }
-  return err?.message ?? 'Error desconocido al consultar la base de datos.'
 }
 
 /**
@@ -77,7 +68,7 @@ export function useTable(table, { select = '*', filters = [], orderBy = null, en
       writeCache(cacheKey, rows ?? [])
       setStale(false)
     } catch (err) {
-      setError({ message: friendlyError(err) })
+      setError({ message: getFriendlyErrorMessage(err) })
       const cached = readCache(cacheKey)
       if (cached) {
         setData(cached)

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth.jsx'
+import { getFriendlyErrorMessage } from '../../lib/errorHandler'
 import './login.css'
 
 export default function Login() {
@@ -18,7 +19,7 @@ export default function Login() {
     } catch (err) {
       setError(err.message === 'Invalid login credentials'
         ? 'Correo o contraseña incorrectos'
-        : 'No se pudo iniciar sesión. Intenta de nuevo.')
+        : getFriendlyErrorMessage(err))
     } finally {
       setLoading(false)
     }

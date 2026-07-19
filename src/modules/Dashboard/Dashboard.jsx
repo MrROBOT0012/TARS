@@ -17,6 +17,7 @@ import DerivChip from '../../components/ui/DerivChip.jsx'
 import ActionButton from '../../components/ui/ActionButton.jsx'
 import StatRow from '../../components/ui/StatRow.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
+import OnboardingGuide from './OnboardingGuide.jsx'
 import './dashboard.css'
 
 const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
@@ -37,6 +38,7 @@ export default function Dashboard() {
   const enabled = !!selectedCicloId
   const cicloFilter = [['ciclo_id', 'eq', selectedCicloId]]
 
+  const { data: fincas, loading: lf } = useTable('fincas', { orderBy: { column: 'nombre' } })
   const { data: gastos, loading: lg, error: eg } = useTable('gastos_campo', { filters: cicloFilter, enabled })
   const { data: basculas, loading: lb, error: eb } = useTable('basculas', { filters: cicloFilter, enabled })
   const { data: secados, loading: ls, error: es } = useTable('secados', { filters: cicloFilter, enabled })
@@ -117,16 +119,12 @@ export default function Dashboard() {
     return <ErrorState error={ciclosError} />
   }
 
-  if (!ciclosLoading && ciclos.length === 0) {
-    return (
-      <div className="empty-state">
-        <div className="icon">🔄</div>
-        <p>No hay ciclos creados todavía.</p>
-        <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => navigate('/ciclos')}>
-          Crear primer ciclo
-        </button>
-      </div>
-    )
+  const onboardingLoading = ciclosLoading || lf
+  const onboardingDone = [fincas.length > 0, ciclos.length > 0, basculas.length > 0, secados.length > 0]
+  const onboardingComplete = onboardingDone.every(Boolean)
+
+  if (!onboardingLoading && !onboardingComplete) {
+    return <OnboardingGuide done={onboardingDone} onNavigate={navigate} />
   }
 
   return (
