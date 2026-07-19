@@ -24,8 +24,10 @@ body {
 }
 
 #root {
+  /* Plain 100vh (not 100dvh) on purpose: dvh live-recalculates as the
+     mobile browser's address bar hides/shows during scroll, which was
+     leaving a phantom blank gap below the last element on every page. */
   min-height: 100vh;
-  min-height: 100dvh;
 }
 
 h1, h2, h3, h4, h5, h6 {

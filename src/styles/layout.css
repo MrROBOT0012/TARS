@@ -1,8 +1,8 @@
 .app-root {
   display: flex;
   flex-direction: column;
+  /* Plain 100vh, not 100dvh — see base.css #root for why. */
   min-height: 100vh;
-  min-height: 100dvh;
 }
 
 .app-shell {
