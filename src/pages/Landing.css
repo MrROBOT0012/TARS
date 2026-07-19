@@ -225,28 +225,4 @@
     transform: scale(1.6);
     transform-origin: center center;
   }
-
-  /* Fix blank space after the footer: #root's global min-height: 100dvh
-     recalculates as the mobile browser chrome hides on scroll, leaving a
-     phantom gap below the last section. Scoped to the landing route only
-     via :has() so app routes keep their own layout untouched. */
-  html:has(#root > .landing),
-  body:has(#root > .landing) {
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-  #root:has(> .landing) {
-    min-height: 0;
-    height: auto;
-  }
-  .landing {
-    min-height: 0;
-  }
-  .landing-cta {
-    margin: 0;
-  }
-  .landing-footer {
-    margin: 0;
-    padding-bottom: max(40px, env(safe-area-inset-bottom));
-  }
 }
