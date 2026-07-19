@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
+import { useOnboarding } from '../../hooks/useOnboarding.jsx'
 import { formatCordoba, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
+import OnboardingStepBanner from '../../components/ui/OnboardingStepBanner.jsx'
 
 const CATEGORIAS = ['Siembra', 'Fertilizante', 'Fumigación', 'Riego', 'Mano de obra', 'Combustible', 'Maquinaria', 'Otro']
 
@@ -15,6 +18,8 @@ function emptyForm(fincaId) {
 }
 
 export default function Campo() {
+  const [searchParams] = useSearchParams()
+  const autoOpenNew = searchParams.get('new') === '1'
   const { selectedCicloId, selectedCiclo, ciclos, error: ciclosError } = useCiclo()
   const { data: fincas } = useTable('fincas', { orderBy: { column: 'nombre' } })
   const {
@@ -31,10 +36,16 @@ export default function Campo() {
 
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
+  const { markStepDone } = useOnboarding()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (autoOpenNew && selectedCicloId) openNew()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenNew, selectedCicloId])
 
   function openNew() {
     setForm(emptyForm(selectedCiclo?.finca_id))
@@ -73,6 +84,7 @@ export default function Campo() {
         await updateRow('gastos_campo', editing, values)
       }
       showSuccess('Gasto guardado')
+      markStepDone('campo')
       setEditing(null)
       await refetch()
     } catch (err) {
@@ -107,6 +119,7 @@ export default function Campo() {
 
   return (
     <div className="fade-in">
+      <OnboardingStepBanner step="campo" />
       <div className="section-header">
         <h2>Gastos de campo</h2>
         <button className="btn btn-primary btn-sm" onClick={openNew}>

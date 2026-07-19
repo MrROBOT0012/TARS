@@ -3,9 +3,25 @@ import { supabase } from '../lib/supabase'
 import { useToast } from './useToast.jsx'
 
 const OnboardingContext = createContext(null)
-const STORAGE_KEY = 'tars_onboarding_v1'
-const STEP_KEYS = ['finca', 'ciclo', 'bascula', 'secado']
-const STEP_TABLES = { finca: 'fincas', ciclo: 'ciclos', bascula: 'basculas', secado: 'secados' }
+const STORAGE_KEY = 'tars_onboarding_v2'
+
+const STEP_KEYS = ['finca', 'ciclo', 'campo', 'cosecha', 'bascula', 'secado', 'embodegado', 'turno', 'venta']
+const STEP_TABLES = {
+  finca: 'fincas',
+  ciclo: 'ciclos',
+  campo: 'gastos_campo',
+  cosecha: 'cosechas',
+  bascula: 'basculas',
+  secado: 'secados',
+  embodegado: 'embodegados',
+  turno: 'turnos_trillo',
+  venta: 'ventas'
+}
+const SKIPPABLE_KEYS = new Set(['campo', 'cosecha'])
+
+function emptyStatuses() {
+  return STEP_KEYS.reduce((acc, key) => ({ ...acc, [key]: 'pending' }), {})
+}
 
 function readStorage() {
   try {
@@ -28,9 +44,7 @@ export function OnboardingProvider({ children }) {
   const { showSuccess } = useToast()
   const saved = readStorage()
   const [dismissedForever, setDismissedForever] = useState(saved?.dismissedForever ?? false)
-  const [steps, setSteps] = useState(
-    saved?.steps ?? { finca: false, ciclo: false, bascula: false, secado: false }
-  )
+  const [statuses, setStatuses] = useState(saved?.statuses ?? emptyStatuses())
   const celebratedRef = useRef(saved?.dismissedForever ?? false)
 
   useEffect(() => {
@@ -41,13 +55,13 @@ export function OnboardingProvider({ children }) {
         STEP_KEYS.map((key) => supabase.from(STEP_TABLES[key]).select('id', { count: 'exact', head: true }))
       )
       if (cancelled) return
-      setSteps((prev) => {
+      setStatuses((prev) => {
         let changed = false
         const next = { ...prev }
         STEP_KEYS.forEach((key, i) => {
           const { count, error } = results[i]
-          if (!error && (count ?? 0) > 0 && !next[key]) {
-            next[key] = true
+          if (!error && (count ?? 0) > 0 && next[key] !== 'done') {
+            next[key] = 'done'
             changed = true
           }
         })
@@ -61,8 +75,8 @@ export function OnboardingProvider({ children }) {
   }, [dismissedForever])
 
   useEffect(() => {
-    const allDone = STEP_KEYS.every((k) => steps[k])
-    if (allDone && !celebratedRef.current) {
+    const allResolved = STEP_KEYS.every((k) => statuses[k] !== 'pending')
+    if (allResolved && !celebratedRef.current) {
       celebratedRef.current = true
       setDismissedForever(true)
       showSuccess('🎉 ¡TARS está listo! Ya puedes gestionar tu operación completa.', {
@@ -70,16 +84,31 @@ export function OnboardingProvider({ children }) {
         celebration: true
       })
     }
-    writeStorage({ steps, dismissedForever: dismissedForever || allDone })
-  }, [steps, dismissedForever, showSuccess])
+    writeStorage({ statuses, dismissedForever: dismissedForever || allResolved })
+  }, [statuses, dismissedForever, showSuccess])
 
   const markStepDone = useCallback((key) => {
-    setSteps((prev) => (prev[key] ? prev : { ...prev, [key]: true }))
+    setStatuses((prev) => (prev[key] === 'done' ? prev : { ...prev, [key]: 'done' }))
   }, [])
 
-  const allDone = STEP_KEYS.every((k) => steps[k])
+  const skipStep = useCallback((key) => {
+    if (!SKIPPABLE_KEYS.has(key)) return
+    setStatuses((prev) => (prev[key] === 'pending' ? { ...prev, [key]: 'skipped' } : prev))
+  }, [])
 
-  const value = { steps, stepKeys: STEP_KEYS, allDone, dismissedForever, markStepDone }
+  const allDone = STEP_KEYS.every((k) => statuses[k] !== 'pending')
+  const activeStep = STEP_KEYS.find((k) => statuses[k] === 'pending') ?? null
+
+  const value = {
+    statuses,
+    stepKeys: STEP_KEYS,
+    skippableKeys: SKIPPABLE_KEYS,
+    activeStep,
+    allDone,
+    dismissedForever,
+    markStepDone,
+    skipStep
+  }
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>
 }

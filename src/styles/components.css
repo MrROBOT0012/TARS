@@ -401,6 +401,15 @@ table.data-table tbody tr:hover {
   background: var(--green-light);
   color: var(--green);
 }
+.onboarding-step.active .onboarding-step-number {
+  background: var(--green);
+  color: var(--white);
+  box-shadow: 0 0 0 3px var(--green-light);
+}
+.onboarding-step.skipped .onboarding-step-number {
+  background: var(--mist);
+  color: var(--ink3);
+}
 .onboarding-step-body {
   flex: 1;
   min-width: 0;
@@ -413,6 +422,10 @@ table.data-table tbody tr:hover {
 .onboarding-step.locked .onboarding-step-title {
   color: var(--ink3);
 }
+.onboarding-step.skipped .onboarding-step-title {
+  color: var(--ink3);
+  text-decoration: line-through;
+}
 .onboarding-step-desc {
   font-size: 12px;
   color: var(--ink3);
@@ -423,6 +436,25 @@ table.data-table tbody tr:hover {
 }
 .onboarding-step.done .onboarding-step-desc {
   margin-bottom: 0;
+}
+.onboarding-step-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.onboarding-skip-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink3);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.onboarding-skip-link:hover {
+  color: var(--ink2);
 }
 
 /* Onboarding floating pill + expanded panel */

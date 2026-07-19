@@ -3,6 +3,7 @@ import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
+import { useOnboarding } from '../../hooks/useOnboarding.jsx'
 import { excedeCapacidadTurno, TURNO_CAPACIDAD_MAX_QQ } from '../../lib/formulas'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
@@ -10,6 +11,7 @@ import StatusChip from '../../components/ui/StatusChip.jsx'
 import DerivChip from '../../components/ui/DerivChip.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
+import OnboardingStepBanner from '../../components/ui/OnboardingStepBanner.jsx'
 
 const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
 const DERIVADOS_LABELS = {
@@ -56,6 +58,7 @@ export default function Turnos({ autoOpenNew }) {
 
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
+  const { markStepDone } = useOnboarding()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -145,6 +148,7 @@ export default function Turnos({ autoOpenNew }) {
         await updateRow('turnos_trillo', editing, values)
       }
       showSuccess('Turno de trillo registrado')
+      markStepDone('turno')
       setEditing(null)
       await refetch()
     } catch (err) {
@@ -179,6 +183,7 @@ export default function Turnos({ autoOpenNew }) {
 
   return (
     <div>
+      <OnboardingStepBanner step="turno" />
       <div className="section-header">
         <h2>Turnos de trillo</h2>
         <button className="btn btn-primary btn-sm" onClick={openNew}>

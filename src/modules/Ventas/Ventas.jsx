@@ -4,10 +4,12 @@ import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
+import { useOnboarding } from '../../hooks/useOnboarding.jsx'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
+import OnboardingStepBanner from '../../components/ui/OnboardingStepBanner.jsx'
 
 const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
 const DERIVADOS_LABELS = {
@@ -49,6 +51,7 @@ export default function Ventas() {
 
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
+  const { markStepDone } = useOnboarding()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -98,6 +101,7 @@ export default function Ventas() {
         await updateRow('ventas', editing, values)
       }
       showSuccess('Venta registrada')
+      markStepDone('venta')
       setEditing(null)
       await refetch()
     } catch (err) {
@@ -136,6 +140,7 @@ export default function Ventas() {
 
   return (
     <div className="fade-in">
+      <OnboardingStepBanner step="venta" />
       <div className="section-header">
         <h2>Ventas &middot; {formatCordoba(totalIngresos)}</h2>
         <button className="btn btn-primary btn-sm" onClick={openNew}>

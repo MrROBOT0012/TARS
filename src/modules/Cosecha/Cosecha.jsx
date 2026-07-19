@@ -1,18 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
+import { useOnboarding } from '../../hooks/useOnboarding.jsx'
 import { formatQq, formatPercent, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
+import OnboardingStepBanner from '../../components/ui/OnboardingStepBanner.jsx'
 
 function emptyForm(fincaId) {
   return { fecha: todayInput(), finca_id: fincaId ?? '', qq_cosechados: '', humedad: '', notas: '' }
 }
 
 export default function Cosecha() {
+  const [searchParams] = useSearchParams()
+  const autoOpenNew = searchParams.get('new') === '1'
   const { selectedCicloId, selectedCiclo, ciclos, error: ciclosError } = useCiclo()
   const { data: fincas } = useTable('fincas', { orderBy: { column: 'nombre' } })
   const {
@@ -29,10 +34,16 @@ export default function Cosecha() {
 
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
+  const { markStepDone } = useOnboarding()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (autoOpenNew && selectedCicloId) openNew()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenNew, selectedCicloId])
 
   function openNew() {
     setForm(emptyForm(selectedCiclo?.finca_id))
@@ -69,6 +80,7 @@ export default function Cosecha() {
         await updateRow('cosechas', editing, values)
       }
       showSuccess('Cosecha guardada')
+      markStepDone('cosecha')
       setEditing(null)
       await refetch()
     } catch (err) {
@@ -103,6 +115,7 @@ export default function Cosecha() {
 
   return (
     <div className="fade-in">
+      <OnboardingStepBanner step="cosecha" />
       <div className="section-header">
         <h2>Cosecha</h2>
         <button className="btn btn-primary btn-sm" onClick={openNew}>
