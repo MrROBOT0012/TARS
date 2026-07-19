@@ -20,7 +20,7 @@
   border-bottom-color: rgba(245, 247, 245, 0.1);
 }
 .landing-logo { height: 38px; width: auto; object-fit: contain; object-position: left; display: block; }
-.landing-logo-link .landing-logo { width: 120px; object-position: left center; }
+.landing-logo-link .landing-logo { width: 160px; height: auto; max-width: none; max-height: none; object-position: left center; }
 .landing-logo--footer { height: 30px; }
 .landing-nav-actions { display: flex; align-items: center; gap: 12px; }
 .landing-burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; padding: 8px; cursor: pointer; }
