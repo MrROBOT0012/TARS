@@ -8,6 +8,7 @@ import { useState } from 'react'
 import QuickActionSheet from '../ui/QuickActionSheet.jsx'
 import InstallBanner from '../ui/InstallBanner.jsx'
 import OnboardingPill from '../ui/OnboardingPill.jsx'
+import WelcomeModal from '../ui/WelcomeModal.jsx'
 
 export default function AppLayout() {
   const location = useLocation()
@@ -30,6 +31,7 @@ export default function AppLayout() {
         </div>
         <BottomNav onQuickAction={() => setQuickActionOpen(true)} />
         <OnboardingPill />
+        <WelcomeModal />
         {quickActionOpen && (
           <QuickActionSheet
             onClose={() => setQuickActionOpen(false)}

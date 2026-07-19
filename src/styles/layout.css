@@ -335,11 +335,13 @@
   right: 0;
   bottom: 0;
   max-height: 92vh;
+  max-width: 100vw;
   background: var(--white);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   z-index: 61;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   animation: slideUp var(--transition-base);
 }
 .bottom-sheet-header {
@@ -403,6 +405,7 @@
   max-height: 88vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   z-index: 61;
   box-shadow: var(--shadow-lg);
   animation: fadeIn var(--transition-base);

@@ -45,6 +45,7 @@ export function OnboardingProvider({ children }) {
   const saved = readStorage()
   const [dismissedForever, setDismissedForever] = useState(saved?.dismissedForever ?? false)
   const [statuses, setStatuses] = useState(saved?.statuses ?? emptyStatuses())
+  const [highlightPill, setHighlightPill] = useState(false)
   const celebratedRef = useRef(saved?.dismissedForever ?? false)
 
   useEffect(() => {
@@ -96,6 +97,11 @@ export function OnboardingProvider({ children }) {
     setStatuses((prev) => (prev[key] === 'pending' ? { ...prev, [key]: 'skipped' } : prev))
   }, [])
 
+  const triggerPillHighlight = useCallback(() => {
+    setHighlightPill(true)
+    setTimeout(() => setHighlightPill(false), 3000)
+  }, [])
+
   const allDone = STEP_KEYS.every((k) => statuses[k] !== 'pending')
   const activeStep = STEP_KEYS.find((k) => statuses[k] === 'pending') ?? null
 
@@ -106,8 +112,10 @@ export function OnboardingProvider({ children }) {
     activeStep,
     allDone,
     dismissedForever,
+    highlightPill,
     markStepDone,
-    skipStep
+    skipStep,
+    triggerPillHighlight
   }
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>
