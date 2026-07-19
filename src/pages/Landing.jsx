@@ -70,7 +70,7 @@ export default function Landing() {
     <div className="landing">
       <nav className={`landing-nav${scrolled ? ' scrolled' : ''}`}>
         <a href="#inicio" onClick={go('inicio')} className="landing-logo-link">
-          <img src={tarsLogo} alt="TARS" className="landing-logo" />
+          <img src={tarsLogo} alt="TARS" className="landing-logo" style={{width: '200px', height: 'auto', minWidth: '200px', display: 'block'}} />
         </a>
         <button
           type="button"
