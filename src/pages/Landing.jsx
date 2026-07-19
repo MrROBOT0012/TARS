@@ -276,28 +276,28 @@ const iconProps = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', s
 
 function IconDocument() {
   return (
-    <svg {...iconProps} stroke="#516458">
+    <svg {...iconProps} stroke="#F5F7F5">
       <rect x="5" y="3" width="14" height="18" rx="2" /><line x1="8" y1="8" x2="16" y2="8" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="8" y1="16" x2="13" y2="16" />
     </svg>
   )
 }
 function IconGrid() {
   return (
-    <svg {...iconProps} stroke="#516458">
+    <svg {...iconProps} stroke="#F5F7F5">
       <rect x="3" y="4" width="18" height="16" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="3" y1="15" x2="21" y2="15" /><line x1="9" y1="4" x2="9" y2="20" /><line x1="15" y1="4" x2="15" y2="20" />
     </svg>
   )
 }
 function IconLayers() {
   return (
-    <svg {...iconProps} stroke="#516458">
+    <svg {...iconProps} stroke="#F5F7F5">
       <rect x="3" y="3" width="12" height="12" rx="2" /><rect x="9" y="9" width="12" height="12" rx="2" />
     </svg>
   )
 }
 function IconEyeOff() {
   return (
-    <svg {...iconProps} stroke="#516458">
+    <svg {...iconProps} stroke="#F5F7F5">
       <circle cx="12" cy="12" r="3.2" /><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z" /><line x1="4" y1="20" x2="20" y2="4" />
     </svg>
   )
