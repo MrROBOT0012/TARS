@@ -89,19 +89,23 @@ export default function Secado({ autoOpenNew }) {
 
   const basculaSeleccionada = basculas.find((b) => b.id === Number(form.bascula_id))
 
-  function updateHumedad(field, value) {
-    const next = { ...form, [field]: value }
-    const qqNeto = basculaSeleccionada?.qq_neto
+  function withQqSecoRecalculado(next, qqNeto) {
     if (qqNeto != null && next.humedad_entrada !== '' && next.humedad_objetivo !== '') {
       const qqSeco = calcularQqSeco(qqNeto, Number(next.humedad_entrada), Number(next.humedad_objetivo))
-      if (qqSeco != null) next.qq_seco = qqSeco.toFixed(2)
+      if (qqSeco != null) return { ...next, qq_seco: qqSeco.toFixed(2) }
     }
-    setForm(next)
+    return next
+  }
+
+  function updateHumedad(field, value) {
+    const next = { ...form, [field]: value }
+    setForm(withQqSecoRecalculado(next, basculaSeleccionada?.qq_neto))
   }
 
   function handleBasculaChange(id) {
     const b = basculas.find((x) => x.id === Number(id))
-    setForm({ ...form, bascula_id: id, finca_id: b?.finca_id ?? form.finca_id })
+    const next = { ...form, bascula_id: id, finca_id: b?.finca_id ?? form.finca_id }
+    setForm(withQqSecoRecalculado(next, b?.qq_neto))
   }
 
   async function handleSubmit(e) {
