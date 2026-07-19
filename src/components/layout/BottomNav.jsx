@@ -18,7 +18,7 @@ export default function BottomNav({ onQuickAction }) {
           <NavLink
             key={item.key}
             to={item.path}
-            end={item.path === '/'}
+            end={item.path === '/app'}
             className={({ isActive }) => 'bottom-nav-item' + (isActive ? ' active' : '')}
           >
             <span className="icon">{item.icon}</span>

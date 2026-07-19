@@ -22,12 +22,12 @@ import './dashboard.css'
 const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
 
 const QUICK_ACTIONS = [
-  { key: 'bascula', label: 'Viaje (báscula)', icon: '⚖️', path: '/bascula?new=1' },
-  { key: 'secado', label: 'Secado', icon: '☀️', path: '/proceso?tab=secado&new=1' },
-  { key: 'embodegado', label: 'Embodegado', icon: '📦', path: '/proceso?tab=embodegado&new=1' },
-  { key: 'turno', label: 'Turno trillo', icon: '🏭', path: '/proceso?tab=turnos&new=1' },
-  { key: 'venta', label: 'Venta', icon: '💰', path: '/ventas?new=1' },
-  { key: 'gasto', label: 'Gasto campo', icon: '🧑‍🌾', path: '/campo?new=1' }
+  { key: 'bascula', label: 'Viaje (báscula)', icon: '⚖️', path: '/app/bascula?new=1' },
+  { key: 'secado', label: 'Secado', icon: '☀️', path: '/app/proceso?tab=secado&new=1' },
+  { key: 'embodegado', label: 'Embodegado', icon: '📦', path: '/app/proceso?tab=embodegado&new=1' },
+  { key: 'turno', label: 'Turno trillo', icon: '🏭', path: '/app/proceso?tab=turnos&new=1' },
+  { key: 'venta', label: 'Venta', icon: '💰', path: '/app/ventas?new=1' },
+  { key: 'gasto', label: 'Gasto campo', icon: '🧑‍🌾', path: '/app/campo?new=1' }
 ]
 
 export default function Dashboard() {
@@ -122,7 +122,7 @@ export default function Dashboard() {
       <div className="empty-state">
         <div className="icon">🔄</div>
         <p>No hay ciclos creados todavía.</p>
-        <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => navigate('/ciclos')}>
+        <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => navigate('/app/ciclos')}>
           Crear primer ciclo
         </button>
       </div>
@@ -178,7 +178,7 @@ export default function Dashboard() {
 
       <div className="section-header">
         <h2>Viajes activos</h2>
-        <button className="btn btn-ghost btn-sm" onClick={() => navigate('/bascula')}>
+        <button className="btn btn-ghost btn-sm" onClick={() => navigate('/app/bascula')}>
           Ver todos
         </button>
       </div>
@@ -205,7 +205,7 @@ export default function Dashboard() {
                 embodegado: embodegado ? true : secado?.estado === 'seco' ? 'active' : false,
                 turno: turno ? true : embodegado ? 'active' : false
               }}
-              onClick={() => navigate('/proceso')}
+              onClick={() => navigate('/app/proceso')}
             />
           ))}
         </div>

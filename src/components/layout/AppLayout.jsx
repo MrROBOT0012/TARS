@@ -15,7 +15,7 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const [quickActionOpen, setQuickActionOpen] = useState(false)
   const current = NAV_ITEMS.find((i) => i.path === location.pathname)
-    ?? (location.pathname === '/' ? NAV_ITEMS[0] : null)
+    ?? (location.pathname === '/app' ? NAV_ITEMS[0] : null)
 
   return (
     <div className="app-root">

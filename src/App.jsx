@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import { ToastProvider } from './hooks/useToast.jsx'
 import { CicloProvider } from './hooks/useCiclo.jsx'
 import { OnboardingProvider } from './hooks/useOnboarding.jsx'
+import Landing from './pages/Landing.jsx'
 import Login from './modules/Auth/Login.jsx'
 import AppLayout from './components/layout/AppLayout.jsx'
 import Dashboard from './modules/Dashboard/Dashboard.jsx'
@@ -26,29 +27,39 @@ function Gate() {
     )
   }
 
-  if (!session) return <Login />
-
   return (
-    <CicloProvider>
-      <OnboardingProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/ciclos" element={<Ciclos />} />
-              <Route path="/fincas" element={<Fincas />} />
-              <Route path="/campo" element={<Campo />} />
-              <Route path="/cosecha" element={<Cosecha />} />
-              <Route path="/bascula" element={<Bascula />} />
-              <Route path="/proceso" element={<Proceso />} />
-              <Route path="/ventas" element={<Ventas />} />
-              <Route path="/reportes" element={<Reportes />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </OnboardingProvider>
-    </CicloProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={session ? <Navigate to="/app" replace /> : <Login />} />
+        <Route
+          path="/app"
+          element={
+            session ? (
+              <CicloProvider>
+                <OnboardingProvider>
+                  <AppLayout />
+                </OnboardingProvider>
+              </CicloProvider>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="ciclos" element={<Ciclos />} />
+          <Route path="fincas" element={<Fincas />} />
+          <Route path="campo" element={<Campo />} />
+          <Route path="cosecha" element={<Cosecha />} />
+          <Route path="bascula" element={<Bascula />} />
+          <Route path="proceso" element={<Proceso />} />
+          <Route path="ventas" element={<Ventas />} />
+          <Route path="reportes" element={<Reportes />} />
+          <Route path="*" element={<Navigate to="/app" replace />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

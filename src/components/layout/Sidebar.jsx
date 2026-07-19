@@ -17,7 +17,7 @@ export default function Sidebar() {
           <NavLink
             key={item.key}
             to={item.path}
-            end={item.path === '/'}
+            end={item.path === '/app'}
             className={({ isActive }) => 'sidebar-link' + (isActive ? ' active' : '')}
           >
             <span className="icon">{item.icon}</span>
