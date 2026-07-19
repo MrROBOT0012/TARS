@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import { getFriendlyErrorMessage } from '../../lib/errorHandler'
 import './login.css'
@@ -27,6 +28,7 @@ export default function Login() {
 
   return (
     <div className="login-screen">
+      <Link to="/" className="login-back">&larr; Volver</Link>
       <div className="login-card fade-in">
         <div className="login-brand">
           <span className="login-brand-dot" />

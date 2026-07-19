@@ -62,7 +62,9 @@
 }
 .landing-hero-bg {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 90% 60% at 50% 0%, #163726 0%, var(--ink) 65%);
+  background: linear-gradient(rgba(13, 20, 16, 0.85), rgba(13, 20, 16, 0.85)), url('/images/campo-maquina.jpg');
+  background-size: cover;
+  background-position: center;
 }
 .landing-hero-bg::after {
   content: ''; position: absolute; inset: 0; opacity: 0.4;
