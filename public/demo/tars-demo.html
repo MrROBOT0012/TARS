@@ -310,6 +310,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     const doc = new DOMParser().parseFromString(template, 'text/html');
     document.documentElement.replaceWith(doc.documentElement);
 
+    // Hide the scene player's built-in playback bar (play/pause, scrubber,
+    // download) — this file is embedded on the landing page as a silent,
+    // autoplaying loop with no user-facing controls. Matched by inline
+    // style signature since the bar has no id/class of its own.
+    {
+      const hideControls = document.createElement('style');
+      hideControls.textContent = 'div[style*="align-self: center"][style*="max-width: 680px"][style*="flex-shrink: 0"] { display: none !important; }';
+      (document.head || document.documentElement).appendChild(hideControls);
+    }
+
     // Resolve page-frame markers: mint this document's own blob for each
     // framed page — from local text when this is the root, otherwise by
     // asking the direct parent over the relay protocol above. An
