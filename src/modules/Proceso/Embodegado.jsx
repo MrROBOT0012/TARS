@@ -131,7 +131,12 @@ export default function Embodegado({ autoOpenNew }) {
     }
   }
 
-  const ticketOf = (id) => basculas.find((b) => String(b.id) === String(id))?.no_ticket ?? '—'
+  const basculaOf = (id) => basculas.find((b) => String(b.id) === String(id))
+  const ticketLabel = (id) => {
+    const b = basculaOf(id)
+    if (!b) return '#—'
+    return `#${b.no_ticket}${b.nombre_productor ? ` · ${b.nombre_productor}` : ''}`
+  }
   const costoSacos = (Number(form.precio_saco) || 0) * (Number(form.sacos) || 0)
 
   if (ciclosError && !ciclos.length) {
@@ -169,7 +174,7 @@ export default function Embodegado({ autoOpenNew }) {
           data={embodegados}
           emptyMessage="No hay registros de embodegado en este ciclo"
           columns={[
-            { key: 'ticket', label: 'Ticket', mono: true, render: (r) => `#${ticketOf(r.bascula_id)}` },
+            { key: 'ticket', label: 'Ticket', mono: true, render: (r) => ticketLabel(r.bascula_id) },
             { key: 'fecha', label: 'Fecha', render: (r) => formatDate(r.fecha) },
             { key: 'qq_embodegados', label: 'QQ embodegados', mono: true, render: (r) => formatQq(r.qq_embodegados, 1) },
             { key: 'sacos', label: 'Sacos', mono: true },
@@ -178,7 +183,7 @@ export default function Embodegado({ autoOpenNew }) {
           ]}
           renderCard={(r) => (
             <div className="list-card-main">
-              <div className="list-card-title mono">#{ticketOf(r.bascula_id)}</div>
+              <div className="list-card-title mono">{ticketLabel(r.bascula_id)}</div>
               <div className="list-card-sub">
                 {formatDate(r.fecha)} &middot; {r.bodega || 'sin bodega'}
               </div>
