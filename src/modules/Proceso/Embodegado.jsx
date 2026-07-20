@@ -77,13 +77,13 @@ export default function Embodegado({ autoOpenNew }) {
   }
 
   function handleBasculaChange(id) {
-    const b = basculas.find((x) => x.id === Number(id))
-    const secado = secados.find((s) => s.bascula_id === Number(id))
+    const b = basculas.find((x) => String(x.id) === String(id))
+    const secado = secados.find((s) => String(s.bascula_id) === String(id))
     setForm({
       ...form,
       bascula_id: id,
       finca_id: b?.finca_id ?? form.finca_id,
-      qq_embodegados: secado?.qq_seco ?? form.qq_embodegados
+      qq_embodegados: secado?.qq_seco ?? ''
     })
   }
 
