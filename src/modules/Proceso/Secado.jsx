@@ -112,7 +112,7 @@ export default function Secado({ autoOpenNew }) {
     setError('')
     try {
       const values = {
-        bascula_id: form.bascula_id ? Number(form.bascula_id) : null,
+        bascula_id: form.bascula_id || null,
         finca_id: form.finca_id || null,
         ciclo_id: selectedCicloId,
         fecha: form.fecha,

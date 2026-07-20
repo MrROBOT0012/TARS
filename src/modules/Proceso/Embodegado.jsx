@@ -93,7 +93,7 @@ export default function Embodegado({ autoOpenNew }) {
     setError('')
     try {
       const values = {
-        bascula_id: form.bascula_id ? Number(form.bascula_id) : null,
+        bascula_id: form.bascula_id || null,
         finca_id: form.finca_id || null,
         ciclo_id: selectedCicloId,
         fecha: form.fecha,
@@ -131,7 +131,7 @@ export default function Embodegado({ autoOpenNew }) {
     }
   }
 
-  const ticketOf = (id) => basculas.find((b) => b.id === id)?.no_ticket ?? '—'
+  const ticketOf = (id) => basculas.find((b) => String(b.id) === String(id))?.no_ticket ?? '—'
   const costoSacos = (Number(form.precio_saco) || 0) * (Number(form.sacos) || 0)
 
   if (ciclosError && !ciclos.length) {
