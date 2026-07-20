@@ -18,7 +18,6 @@ function emptyForm(fincaId) {
     fecha: todayInput(),
     metodo: 'patio',
     numero: '',
-    tipo_patio: '',
     precio_descargue: '',
     precio_secado: '',
     de_preseco: false,
@@ -73,7 +72,6 @@ export default function Secado({ autoOpenNew }) {
       fecha: formatDateInput(row.fecha),
       metodo: row.metodo ?? 'patio',
       numero: row.numero ?? '',
-      tipo_patio: row.tipo_patio ?? '',
       precio_descargue: row.precio_descargue ?? '',
       precio_secado: row.precio_secado ?? '',
       de_preseco: !!row.de_preseco,
@@ -120,7 +118,6 @@ export default function Secado({ autoOpenNew }) {
         fecha: form.fecha,
         metodo: form.metodo,
         numero: form.numero || null,
-        tipo_patio: form.metodo === 'patio' ? form.tipo_patio || null : null,
         precio_descargue: form.precio_descargue ? Number(form.precio_descargue) : 0,
         precio_secado: form.precio_secado ? Number(form.precio_secado) : 0,
         de_preseco: form.de_preseco,
@@ -268,17 +265,9 @@ export default function Secado({ autoOpenNew }) {
                 </select>
               </div>
             </div>
-            <div className="field-row">
-              <div className="field">
-                <label>Número (patio/secadora)</label>
-                <input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} />
-              </div>
-              {form.metodo === 'patio' && (
-                <div className="field">
-                  <label>Tipo de patio</label>
-                  <input value={form.tipo_patio} onChange={(e) => setForm({ ...form, tipo_patio: e.target.value })} placeholder="Cemento, tierra..." />
-                </div>
-              )}
+            <div className="field">
+              <label>Número (patio/secadora)</label>
+              <input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} />
             </div>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, marginBottom: 16 }}>
