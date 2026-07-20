@@ -169,7 +169,12 @@ export default function Turnos({ autoOpenNew }) {
     }
   }
 
-  const ticketOf = (id) => basculas.find((b) => b.id === id)?.no_ticket ?? '—'
+  const ticketOf = (id) => basculas.find((b) => String(b.id) === String(id))?.no_ticket ?? '—'
+  const ticketLabel = (id) => {
+    const b = basculas.find((x) => String(x.id) === String(id))
+    if (!b) return '#—'
+    return `#${b.no_ticket}${b.nombre_productor ? ` · ${b.nombre_productor}` : ''}`
+  }
 
   if (ciclosError && !ciclos.length) {
     return <ErrorState error={ciclosError} />
@@ -270,13 +275,15 @@ export default function Turnos({ autoOpenNew }) {
                   >
                     <input
                       type="checkbox"
+                      className="bascula-select-checkbox"
                       checked={form.bascula_ids.includes(emb.bascula_id)}
                       onChange={() => toggleBascula(emb.bascula_id)}
                     />
-                    <span className="mono">#{ticketOf(emb.bascula_id)}</span>
-                    <span style={{ marginLeft: 'auto' }} className="mono">
-                      {formatQq(emb.qq_embodegados, 1)}
-                    </span>
+                    <div className="bascula-select-info">
+                      <div className="bascula-select-title">{ticketLabel(emb.bascula_id)}</div>
+                      <div className="bascula-select-sub">{formatQq(emb.qq_embodegados, 1)} qq secos · Embodegado</div>
+                    </div>
+                    <span className="bascula-select-badge mono">{formatQq(emb.qq_embodegados, 1)} qq</span>
                   </label>
                 ))}
               </div>
@@ -352,7 +359,7 @@ export default function Turnos({ autoOpenNew }) {
               </div>
             </div>
 
-            <div className="scroll-x" style={{ gap: 8, marginBottom: 16 }}>
+            <div className="deriv-summary-grid">
               {DERIVADOS_KEYS.map((key) => (
                 <DerivChip key={key} derivado={key} qq={formatQq(form.derivados[key] || 0, 1)} />
               ))}

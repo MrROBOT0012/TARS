@@ -42,27 +42,64 @@
 .bascula-select-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  max-height: 240px;
+  gap: 8px;
+  max-height: 320px;
   overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-2);
+  padding: 2px;
 }
 
-.bascula-select-item {
+.bascula-select-list .bascula-select-item {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #F5F7F5;
   cursor: pointer;
-}
-.bascula-select-item:hover {
-  background: var(--mist);
+  margin-bottom: 0;
+  text-transform: none;
+  letter-spacing: normal;
 }
 .bascula-select-item.checked {
-  background: var(--green-light);
+  background: #D4EDE1;
+  border-color: #1A6B42;
+}
+
+.bascula-select-item .bascula-select-checkbox {
+  width: 18px;
+  height: 18px;
+  max-width: none;
+  flex-shrink: 0;
+}
+
+.bascula-select-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.bascula-select-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.bascula-select-sub {
+  font-size: 12px;
+  color: var(--ink3);
+}
+
+.bascula-select-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: var(--green);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
 }
 
 .deriv-inputs {
@@ -70,4 +107,23 @@
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-3);
   min-width: 0;
+}
+
+.deriv-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  overflow: hidden;
+  padding: 0 4px;
+  margin-bottom: var(--space-4);
+}
+.deriv-summary-grid .deriv-chip {
+  min-width: 0;
+  width: 100%;
+  flex-shrink: 1;
+}
+@media (min-width: 769px) {
+  .deriv-summary-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
