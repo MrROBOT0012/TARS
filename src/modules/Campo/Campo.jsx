@@ -11,7 +11,7 @@ import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
 import OnboardingStepBanner from '../../components/ui/OnboardingStepBanner.jsx'
 
-const CATEGORIAS = ['Siembra', 'Fertilizante', 'Fumigación', 'Riego', 'Mano de obra', 'Combustible', 'Maquinaria', 'Otro']
+const CATEGORIAS = ['Siembra', 'Fertilizante', 'Fumigación', 'Riego', 'Mano de obra', 'Combustible', 'Maquinaria', 'Gastos de beneficio', 'Otro']
 
 function emptyForm(fincaId) {
   return { fecha: todayInput(), finca_id: fincaId ?? '', categoria: '', descripcion: '', monto: '', notas: '' }
