@@ -87,7 +87,7 @@ export default function Secado({ autoOpenNew }) {
     setEditing(row.id)
   }
 
-  const basculaSeleccionada = basculas.find((b) => b.id === Number(form.bascula_id))
+  const basculaSeleccionada = basculas.find((b) => String(b.id) === String(form.bascula_id))
 
   function withQqSecoRecalculado(next, qqNeto) {
     if (qqNeto != null && next.humedad_entrada !== '' && next.humedad_objetivo !== '') {
@@ -103,7 +103,7 @@ export default function Secado({ autoOpenNew }) {
   }
 
   function handleBasculaChange(id) {
-    const b = basculas.find((x) => x.id === Number(id))
+    const b = basculas.find((x) => String(x.id) === String(id))
     const next = { ...form, bascula_id: id, finca_id: b?.finca_id ?? form.finca_id }
     setForm(withQqSecoRecalculado(next, b?.qq_neto))
   }

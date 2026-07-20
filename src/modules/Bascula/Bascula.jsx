@@ -36,7 +36,7 @@ function calcQqNeto(pesoBruto, tara) {
   const bruto = Number(pesoBruto)
   const t = Number(tara)
   if (!Number.isFinite(bruto) || !Number.isFinite(t)) return ''
-  const neto = (bruto - t) / 100
+  const neto = bruto - t
   return neto > 0 ? neto.toFixed(2) : ''
 }
 
@@ -288,11 +288,11 @@ export default function Bascula() {
 
             <div className="field-row">
               <div className="field">
-                <label>Peso bruto (lbs)</label>
+                <label>Peso bruto (QQ)</label>
                 <input type="number" step="0.01" value={form.peso_bruto} onChange={(e) => updatePeso('peso_bruto', e.target.value)} required />
               </div>
               <div className="field">
-                <label>Tara (lbs)</label>
+                <label>Tara (QQ)</label>
                 <input type="number" step="0.01" value={form.tara} onChange={(e) => updatePeso('tara', e.target.value)} required />
               </div>
             </div>
