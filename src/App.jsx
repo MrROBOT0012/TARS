@@ -3,8 +3,8 @@ import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import { ToastProvider } from './hooks/useToast.jsx'
 import { CicloProvider } from './hooks/useCiclo.jsx'
 import { OnboardingProvider } from './hooks/useOnboarding.jsx'
-import Landing from './pages/Landing.jsx'
-import Login from './modules/Auth/Login.jsx'
+import LoginPage from './pages/LoginPage.jsx'
+import LandingPageFull from './legacy/LandingPageFull.jsx'
 import AppLayout from './components/layout/AppLayout.jsx'
 import Dashboard from './modules/Dashboard/Dashboard.jsx'
 import Ciclos from './modules/Ciclos/Ciclos.jsx'
@@ -30,8 +30,8 @@ function Gate() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={session ? <Navigate to="/app" replace /> : <Login />} />
+        <Route path="/" element={session ? <Navigate to="/app" replace /> : <LoginPage />} />
+        <Route path="/landing-full" element={<LandingPageFull />} />
         <Route
           path="/app"
           element={
@@ -42,7 +42,7 @@ function Gate() {
                 </OnboardingProvider>
               </CicloProvider>
             ) : (
-              <Navigate to="/login" replace />
+              <Navigate to="/" replace />
             )
           }
         >

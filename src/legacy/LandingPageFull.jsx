@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import tarsLogo from '../assets/logo/tars-logo-dark.svg'
-import './Landing.css'
+import './LandingPageFull.css'
 
 const NAV_LINKS = [
   { id: 'inicio', label: 'Inicio' },
@@ -37,7 +37,7 @@ function scrollToId(id) {
   window.scrollTo({ top: y, behavior: 'smooth' })
 }
 
-export default function Landing() {
+export default function LandingPageFull() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [toastOpen, setToastOpen] = useState(false)
@@ -84,7 +84,7 @@ export default function Landing() {
           <button type="button" className="btn btn-outline-light" onClick={openToast}>
             Solicitar acceso
           </button>
-          <Link to="/login" className="btn btn-primary-pill">Iniciar sesión</Link>
+          <Link to="/" className="btn btn-primary-pill">Iniciar sesión</Link>
         </div>
       </nav>
 
@@ -97,7 +97,7 @@ export default function Landing() {
             <button type="button" className="btn btn-outline-light" onClick={openToast}>
               Solicitar acceso
             </button>
-            <Link to="/login" className="btn btn-primary-pill" onClick={() => setMenuOpen(false)}>
+            <Link to="/" className="btn btn-primary-pill" onClick={() => setMenuOpen(false)}>
               Iniciar sesión
             </Link>
           </div>
@@ -222,7 +222,7 @@ export default function Landing() {
           {NAV_LINKS.map((l) => (
             <a key={l.id} href={`#${l.id}`} onClick={go(l.id)}>{l.label}</a>
           ))}
-          <Link to="/login">Iniciar sesión</Link>
+          <Link to="/">Iniciar sesión</Link>
         </nav>
         <span className="landing-footer-copy">© 2026 TARS · Sistema Arrocero</span>
         <span className="landing-footer-credit">Desarrollado por Zelaya&amp;Co</span>

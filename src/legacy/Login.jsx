@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../hooks/useAuth.jsx'
-import { getFriendlyErrorMessage } from '../../lib/errorHandler'
+import { useAuth } from '../hooks/useAuth.jsx'
+import { getFriendlyErrorMessage } from '../lib/errorHandler'
 import './login.css'
 
 export default function Login() {
