@@ -26,19 +26,6 @@
   color: var(--white);
 }
 
-.capacity-warning {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  background: var(--red-light);
-  color: var(--red);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: var(--space-3);
-}
-
 .bascula-select-list {
   display: flex;
   flex-direction: column;

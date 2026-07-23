@@ -4,7 +4,6 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
-import { excedeCapacidadTurno, TURNO_CAPACIDAD_MAX_QQ } from '../../lib/formulas'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
@@ -116,7 +115,6 @@ export default function Turnos({ autoOpenNew }) {
     const e = embodegados.find((emb) => emb.bascula_id === id)
     return sum + (Number(e?.qq_embodegados) || 0)
   }, 0)
-  const excede = excedeCapacidadTurno(qqTotales)
   const costoTrillado = (Number(form.precio_trillado_qq) || 0) * qqTotales + (Number(form.costo_llenado_pila) || 0)
 
   async function handleSubmit(e) {
@@ -289,11 +287,6 @@ export default function Turnos({ autoOpenNew }) {
               </div>
             </div>
 
-            {excede && (
-              <div className="capacity-warning">
-                ⚠️ Supera la capacidad máxima de {TURNO_CAPACIDAD_MAX_QQ} qq por turno ({formatQq(qqTotales, 1)})
-              </div>
-            )}
             <div className="field">
               <label>QQ totales seleccionados</label>
               <input className="mono" value={formatQq(qqTotales, 2)} disabled readOnly />

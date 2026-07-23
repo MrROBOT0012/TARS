@@ -1,5 +1,4 @@
 export const HUMEDAD_OBJETIVO_ESTANDAR = 12.5
-export const TURNO_CAPACIDAD_MAX_QQ = 1200
 
 /**
  * qq_seco = qq_neto * (100 - humedad_entrada) / (100 - humedad_objetivo)
@@ -50,8 +49,4 @@ export function calcularPrecioVentaPromedio(ventas) {
 export function sumar(items, key) {
   if (!items) return 0
   return items.reduce((sum, item) => sum + (Number(item[key]) || 0), 0)
-}
-
-export function excedeCapacidadTurno(qqTotales) {
-  return Number(qqTotales) > TURNO_CAPACIDAD_MAX_QQ
 }
