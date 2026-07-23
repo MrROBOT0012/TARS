@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
@@ -55,6 +55,19 @@ export default function Embodegado({ autoOpenNew }) {
     if (autoOpenNew && enabled) openNew()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpenNew, enabled])
+
+  const usedBasculaIds = useMemo(() => {
+    const used = new Set()
+    embodegados.forEach((e) => {
+      if (editing !== 'new' && e.id === editing) return
+      used.add(String(e.bascula_id))
+    })
+    return used
+  }, [embodegados, editing])
+
+  const availableBasculas = basculas.filter(
+    (b) => !usedBasculaIds.has(String(b.id)) || String(b.id) === String(form.bascula_id)
+  )
 
   function openNew() {
     setForm(emptyForm(selectedCiclo?.finca_id))
@@ -226,12 +239,15 @@ export default function Embodegado({ autoOpenNew }) {
               <label>Viaje (ticket de báscula)</label>
               <select value={form.bascula_id} onChange={(e) => handleBasculaChange(e.target.value)} required>
                 <option value="">Seleccionar viaje</option>
-                {basculas.map((b) => (
+                {availableBasculas.map((b) => (
                   <option key={b.id} value={b.id}>
                     #{b.no_ticket} &middot; {b.nombre_productor}
                   </option>
                 ))}
               </select>
+              {availableBasculas.length === 0 && (
+                <span className="field-hint">No hay viajes disponibles para embodegar</span>
+              )}
             </div>
             <div className="field">
               <label>Fecha</label>
