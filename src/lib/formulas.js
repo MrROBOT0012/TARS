@@ -50,3 +50,43 @@ export function sumar(items, key) {
   if (!items) return 0
   return items.reduce((sum, item) => sum + (Number(item[key]) || 0), 0)
 }
+
+/**
+ * The schema has no explicit link between a preseco secado row and the
+ * seco row that continues from it, so the two are matched by bascula_id +
+ * estado. When more than one preseco row exists for the same viaje (a data
+ * mistake), the most recent one by fecha is treated as the one in progress.
+ */
+export function findPresecoRecord(secados, basculaId, excludeId = null) {
+  if (!secados || !basculaId) return null
+  const candidates = secados.filter(
+    (s) => s.id !== excludeId && s.estado === 'preseco' && String(s.bascula_id) === String(basculaId)
+  )
+  if (candidates.length === 0) return null
+  return candidates.reduce((latest, s) => {
+    if (!latest) return s
+    return new Date(s.fecha) >= new Date(latest.fecha) ? s : latest
+  }, null)
+}
+
+/**
+ * A preseco row is superseded once a seco row for the same viaje continues
+ * from it (de_preseco === true) — its qq_seco is an intermediate weight
+ * already folded into the final seco weight, so it must not be counted
+ * again in production totals.
+ */
+export function isSecadoSuperseded(secado, allSecados) {
+  if (!secado || secado.estado !== 'preseco') return false
+  return (allSecados ?? []).some(
+    (s) => s.id !== secado.id && s.estado === 'seco' && s.de_preseco && String(s.bascula_id) === String(secado.bascula_id)
+  )
+}
+
+/**
+ * Secado rows that should count toward production totals: everything
+ * except preseco rows already superseded by a final seco row.
+ */
+export function secadosVigentes(secados) {
+  if (!secados) return []
+  return secados.filter((s) => !isSecadoSuperseded(s, secados))
+}

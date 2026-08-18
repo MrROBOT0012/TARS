@@ -8,7 +8,8 @@ import {
   calcularMargenPorQq,
   calcularPrecioVentaPromedio,
   calcularRendimientoAE,
-  calcularMerma
+  calcularMerma,
+  secadosVigentes
 } from '../../lib/formulas'
 import { formatCordoba, formatQq, formatPercent } from '../../lib/formatters'
 import KPICard from '../../components/ui/KPICard.jsx'
@@ -69,7 +70,7 @@ export default function Dashboard() {
     const utilidadNeta = ingresosTotal - gastosTotal
 
     const qqGranza = sumar(basculas, 'qq_neto')
-    const qqSecos = sumar(secados, 'qq_seco')
+    const qqSecos = sumar(secadosVigentes(secados), 'qq_seco')
     const merma = calcularMerma(qqGranza, qqSecos)
     const mermaPct = qqGranza ? (merma / qqGranza) * 100 : null
 

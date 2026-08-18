@@ -4,7 +4,7 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
-import { calcularQqSeco, calcularMerma, HUMEDAD_OBJETIVO_ESTANDAR } from '../../lib/formulas'
+import { calcularQqSeco, calcularMerma, findPresecoRecord, HUMEDAD_OBJETIVO_ESTANDAR } from '../../lib/formulas'
 import { formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
@@ -86,24 +86,39 @@ export default function Secado({ autoOpenNew }) {
   }
 
   const basculaSeleccionada = basculas.find((b) => String(b.id) === String(form.bascula_id))
+  const presecoOrigen = form.de_preseco
+    ? findPresecoRecord(secados, form.bascula_id, editing === 'new' ? null : editing)
+    : null
 
-  function withQqSecoRecalculado(next, qqNeto) {
-    if (qqNeto != null && next.humedad_entrada !== '' && next.humedad_objetivo !== '') {
-      const qqSeco = calcularQqSeco(qqNeto, Number(next.humedad_entrada), Number(next.humedad_objetivo))
+  function baseQqParaSecado(basculaId, dePreseco) {
+    if (dePreseco) {
+      const preseco = findPresecoRecord(secados, basculaId, editing === 'new' ? null : editing)
+      return preseco ? preseco.qq_seco : null
+    }
+    const b = basculas.find((x) => String(x.id) === String(basculaId))
+    return b ? b.qq_neto : null
+  }
+
+  function withQqSecoRecalculado(next) {
+    const baseQq = baseQqParaSecado(next.bascula_id, next.de_preseco)
+    if (baseQq != null && next.humedad_entrada !== '' && next.humedad_objetivo !== '') {
+      const qqSeco = calcularQqSeco(baseQq, Number(next.humedad_entrada), Number(next.humedad_objetivo))
       if (qqSeco != null) return { ...next, qq_seco: qqSeco.toFixed(2) }
     }
     return next
   }
 
   function updateHumedad(field, value) {
-    const next = { ...form, [field]: value }
-    setForm(withQqSecoRecalculado(next, basculaSeleccionada?.qq_neto))
+    setForm(withQqSecoRecalculado({ ...form, [field]: value }))
   }
 
   function handleBasculaChange(id) {
     const b = basculas.find((x) => String(x.id) === String(id))
-    const next = { ...form, bascula_id: id, finca_id: b?.finca_id ?? form.finca_id }
-    setForm(withQqSecoRecalculado(next, b?.qq_neto))
+    setForm(withQqSecoRecalculado({ ...form, bascula_id: id, finca_id: b?.finca_id ?? form.finca_id }))
+  }
+
+  function handleDePresecoChange(checked) {
+    setForm(withQqSecoRecalculado({ ...form, de_preseco: checked }))
   }
 
   async function handleSubmit(e) {
@@ -275,10 +290,17 @@ export default function Secado({ autoOpenNew }) {
               <input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} />
             </div>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, marginBottom: 16 }}>
-              <input type="checkbox" checked={form.de_preseco} onChange={(e) => setForm({ ...form, de_preseco: e.target.checked })} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+              <input type="checkbox" checked={form.de_preseco} onChange={(e) => handleDePresecoChange(e.target.checked)} />
               Continúa de un preseco anterior
             </label>
+            {form.de_preseco && (
+              <p className="field-hint" style={{ marginTop: -4, marginBottom: 16 }}>
+                {presecoOrigen
+                  ? `Encadenado desde el preseco del ${formatDate(presecoOrigen.fecha)}: ${formatQq(presecoOrigen.qq_seco, 2)}`
+                  : '⚠️ No se encontró un registro de preseco para este viaje — el cálculo no puede encadenarse'}
+              </p>
+            )}
 
             <div className="field-row">
               <div className="field">
