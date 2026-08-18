@@ -91,7 +91,11 @@ export default function Embodegado({ autoOpenNew }) {
 
   function handleBasculaChange(id) {
     const b = basculas.find((x) => String(x.id) === String(id))
-    const secado = secados.find((s) => String(s.bascula_id) === String(id))
+    const secadosDelViaje = secados.filter((s) => String(s.bascula_id) === String(id))
+    const secado =
+      secadosDelViaje.find((s) => s.estado === 'seco') ??
+      secadosDelViaje.find((s) => s.estado === 'preseco') ??
+      secadosDelViaje[0]
     setForm({
       ...form,
       bascula_id: id,
