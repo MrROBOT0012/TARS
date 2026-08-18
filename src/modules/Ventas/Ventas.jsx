@@ -164,6 +164,7 @@ export default function Ventas() {
           emptyMessage="No hay ventas registradas en este ciclo"
           columns={[
             { key: 'fecha', label: 'Fecha', render: (r) => formatDate(r.fecha) },
+            { key: 'finca', label: 'Finca', render: (r) => fincaNombre(r.finca_id) },
             { key: 'derivado', label: 'Derivado', render: (r) => DERIVADOS_LABELS[r.derivado] ?? r.derivado },
             { key: 'qq_vendidos', label: 'QQ vendidos', mono: true, render: (r) => formatQq(r.qq_vendidos, 1) },
             { key: 'precio_qq', label: 'Precio/QQ', mono: true, render: (r) => formatCordoba(r.precio_qq) },
@@ -174,7 +175,7 @@ export default function Ventas() {
             <div className="list-card-main">
               <div className="list-card-title">{DERIVADOS_LABELS[r.derivado] ?? r.derivado}</div>
               <div className="list-card-sub">
-                {formatDate(r.fecha)} &middot; {r.comprador || 'sin comprador'}
+                {formatDate(r.fecha)} &middot; {fincaNombre(r.finca_id)} &middot; {r.comprador || 'sin comprador'}
               </div>
               <div className="list-card-value mono" style={{ marginTop: 6 }}>
                 {formatQq(r.qq_vendidos, 1)} &times; {formatCordoba(r.precio_qq)} = {formatCordoba((r.qq_vendidos || 0) * (r.precio_qq || 0))}
