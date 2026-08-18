@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
@@ -41,6 +42,8 @@ function calcQqNeto(pesoBruto, tara) {
 }
 
 export default function Bascula() {
+  const [searchParams] = useSearchParams()
+  const autoOpenNew = searchParams.get('new') === '1'
   const { selectedCicloId, selectedCiclo, ciclos, error: ciclosError } = useCiclo()
   const { data: fincas } = useTable('fincas', { orderBy: { column: 'nombre' } })
   const {
@@ -62,6 +65,11 @@ export default function Bascula() {
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (autoOpenNew && selectedCicloId) openNew()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenNew, selectedCicloId])
 
   function openNew() {
     setForm(emptyForm(selectedCiclo?.finca_id))
