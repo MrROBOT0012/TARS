@@ -330,7 +330,7 @@ export default function Reportes() {
             </div>
             {!medido && (
               <p className="field-hint" style={{ marginTop: -4, marginBottom: 10 }}>
-                Trillado y derivados incluyen turnos compartidos con otra(s) finca(s) — esa porción es prorrateada por qq, no medida directamente.
+                Trillado y derivados incluyen turnos compartidos con otra(s) finca(s) — esa porción se reparte por qq, no es una medición directa.
               </p>
             )}
             <StatRow icon="💰" label="Ingresos" value={formatCordoba(pl.ingresosTotal)} />
