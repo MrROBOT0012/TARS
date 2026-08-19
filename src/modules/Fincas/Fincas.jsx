@@ -11,6 +11,25 @@ import OnboardingStepBanner from '../../components/ui/OnboardingStepBanner.jsx'
 
 const EMPTY_FORM = { nombre: '', tipo: '', manzanas: '', notas: '' }
 
+const TIPOS_FINCA = [
+  { value: 'propia', label: 'Propia' },
+  { value: 'alquilada', label: 'Alquilada' },
+  { value: 'financiada', label: 'Financiada a terceros' }
+]
+const TIPO_LABELS = Object.fromEntries(TIPOS_FINCA.map((t) => [t.value, t.label]))
+
+/**
+ * tipo used to be free text (placeholder suggested "propia, alquilada" but
+ * nothing enforced it), so older rows may have inconsistent casing (e.g.
+ * "Propia" instead of "propia"). Normalize case-insensitively when reading
+ * so those rows still resolve to the right <select> option; the value gets
+ * corrected to the canonical lowercase form the next time the record is saved.
+ */
+function normalizarTipo(tipo) {
+  const match = TIPOS_FINCA.find((t) => t.value === (tipo ?? '').toLowerCase())
+  return match ? match.value : ''
+}
+
 export default function Fincas() {
   const {
     data: fincas,
@@ -36,7 +55,7 @@ export default function Fincas() {
   function openEdit(row) {
     setForm({
       nombre: row.nombre ?? '',
-      tipo: row.tipo ?? '',
+      tipo: normalizarTipo(row.tipo),
       manzanas: row.manzanas ?? '',
       notas: row.notas ?? ''
     })
@@ -108,7 +127,7 @@ export default function Fincas() {
           emptyMessage="No hay fincas registradas"
           columns={[
             { key: 'nombre', label: 'Nombre' },
-            { key: 'tipo', label: 'Tipo' },
+            { key: 'tipo', label: 'Tipo', render: (r) => TIPO_LABELS[normalizarTipo(r.tipo)] ?? r.tipo ?? 'Sin tipo' },
             { key: 'manzanas', label: 'Manzanas', mono: true, render: (r) => formatNumber(r.manzanas, 1) },
             { key: 'notas', label: 'Notas' }
           ]}
@@ -116,7 +135,7 @@ export default function Fincas() {
             <div className="list-card-main">
               <div className="list-card-title">{r.nombre}</div>
               <div className="list-card-sub">
-                {r.tipo ?? 'Sin tipo'} &middot; {formatNumber(r.manzanas, 1)} mz
+                {TIPO_LABELS[normalizarTipo(r.tipo)] ?? r.tipo ?? 'Sin tipo'} &middot; {formatNumber(r.manzanas, 1)} mz
               </div>
             </div>
           )}
@@ -157,11 +176,14 @@ export default function Fincas() {
             <div className="field-row">
               <div className="field">
                 <label>Tipo</label>
-                <input
-                  value={form.tipo}
-                  onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                  placeholder="Ej. propia, alquilada"
-                />
+                <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
+                  <option value="">Seleccionar</option>
+                  {TIPOS_FINCA.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="field">
                 <label>Manzanas (mz)</label>

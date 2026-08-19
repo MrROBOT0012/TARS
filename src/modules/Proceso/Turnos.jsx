@@ -4,6 +4,8 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
+import { confirmarFechaFueraDeCiclo } from '../../lib/cicloValidation'
+import { DERIVADOS_KEYS, fincasInvolucradasEnTurno } from '../../lib/formulas'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
@@ -12,7 +14,6 @@ import ErrorState from '../../components/ui/ErrorState.jsx'
 import FormPanel from '../../components/layout/FormPanel.jsx'
 import OnboardingStepBanner from '../../components/ui/OnboardingStepBanner.jsx'
 
-const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
 const DERIVADOS_LABELS = {
   arroz_entero: 'Arroz entero',
   semolina: 'Semolina',
@@ -41,6 +42,7 @@ export default function Turnos({ autoOpenNew }) {
   const cicloFilter = [['ciclo_id', 'eq', selectedCicloId]]
   const enabled = !!selectedCicloId
 
+  const { data: fincas } = useTable('fincas', { orderBy: { column: 'nombre' } })
   const { data: basculas } = useTable('basculas', { filters: cicloFilter, enabled })
   const { data: embodegados } = useTable('embodegados', { filters: cicloFilter, enabled })
   const {
@@ -117,8 +119,33 @@ export default function Turnos({ autoOpenNew }) {
   }, 0)
   const costoTrillado = (Number(form.precio_trillado_qq) || 0) * qqTotales + (Number(form.costo_llenado_pila) || 0)
 
+  /**
+   * A turno mixing a "financiada" (financed-to-a-third-party) finca with a
+   * non-financiada one means the financed finca's derivados/costo will be
+   * a proportional estimate (see atribucionesTurno), not an exact
+   * measurement — the user must consciously acknowledge that before saving.
+   */
+  function confirmarMezclaFinanciada() {
+    const fincaIds = fincasInvolucradasEnTurno({ bascula_ids: form.bascula_ids }, basculas)
+    const tiposInvolucrados = fincaIds.map((id) => fincas.find((f) => f.id === id)?.tipo?.toLowerCase() ?? null)
+    const hayFinanciada = tiposInvolucrados.includes('financiada')
+    const hayNoFinanciada = tiposInvolucrados.some((t) => t !== 'financiada')
+    if (!hayFinanciada || !hayNoFinanciada) return true
+
+    const nombresFinanciadas = fincaIds
+      .filter((id) => fincas.find((f) => f.id === id)?.tipo?.toLowerCase() === 'financiada')
+      .map((id) => fincas.find((f) => f.id === id)?.nombre ?? '—')
+      .join(', ')
+    return confirm(
+      `⚠️ Este turno mezcla básculas de una finca financiada (${nombresFinanciadas}) con otra(s) finca(s) no financiada(s).\n\n` +
+        `Los derivados y el costo de trillado para la finca financiada serán una estimación proporcional por qq, no una medición exacta.\n\n¿Guardar de todas formas?`
+    )
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo)) return
+    if (!confirmarMezclaFinanciada()) return
     setSaving(true)
     setError('')
     try {

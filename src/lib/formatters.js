@@ -28,7 +28,7 @@ export function formatPercent(value, decimals = 1) {
  * treats them as UTC midnight, which renders as the previous day in any
  * timezone behind UTC (all of the Americas, including Nicaragua).
  */
-function parseCalendarDate(value) {
+export function parseCalendarDate(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? '')
   if (match) {
     const [, y, m, d] = match

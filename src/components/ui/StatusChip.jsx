@@ -7,7 +7,9 @@ const STATUS_MAP = {
   activo: { label: 'Activo', tone: 'green' },
   cerrado: { label: 'Cerrado', tone: 'gray' },
   propio: { label: 'Propio', tone: 'teal' },
-  comprado: { label: 'Comprado', tone: 'blue' }
+  comprado: { label: 'Comprado', tone: 'blue' },
+  medido: { label: 'Medido', tone: 'green' },
+  estimado: { label: 'Estimado (prorrateado)', tone: 'amber' }
 }
 
 export default function StatusChip({ status }) {

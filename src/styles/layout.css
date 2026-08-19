@@ -15,6 +15,24 @@
   display: none;
 }
 
+/* Base (mobile-first) state: hidden until the desktop media query below
+   turns it on. This MUST come before that @media block — an unconditional
+   rule placed after a media query wins the cascade at any width the query
+   also matches, which previously made .pc-topbar permanently display:none
+   even on desktop (see commit ca173d7, which introduced this rule in the
+   wrong position while fixing a mobile-only leak). */
+.pc-topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
 @media (min-width: 769px) {
   .app-shell {
     display: flex;
@@ -128,18 +146,6 @@
     display: flex;
   }
 
-}
-
-.pc-topbar {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) var(--space-6);
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 20;
 }
 
 /* ---------- Mobile Topbar ---------- */

@@ -5,6 +5,7 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
+import { confirmarFechaFueraDeCiclo } from '../../lib/cicloValidation'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
@@ -82,6 +83,7 @@ export default function Ventas() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo)) return
     setSaving(true)
     setError('')
     try {

@@ -9,8 +9,9 @@ import {
   calcularPrecioVentaPromedio,
   calcularRendimientoAE,
   calcularMerma,
-  secadosVigentes
+  secadosFinalizados
 } from '../../lib/formulas'
+import { fechaFueraDeCiclo, rangoCicloTexto } from '../../lib/cicloValidation'
 import { formatCordoba, formatQq, formatPercent } from '../../lib/formatters'
 import KPICard from '../../components/ui/KPICard.jsx'
 import FlowCard from '../../components/ui/FlowCard.jsx'
@@ -32,14 +33,18 @@ const QUICK_ACTIONS = [
 ]
 
 export default function Dashboard() {
-  const { selectedCicloId, loading: ciclosLoading, error: ciclosError, ciclos } = useCiclo()
+  const { selectedCicloId, selectedCiclo, loading: ciclosLoading, error: ciclosError, ciclos } = useCiclo()
   const navigate = useNavigate()
 
   const enabled = !!selectedCicloId
   const cicloFilter = [['ciclo_id', 'eq', selectedCicloId]]
 
   const { data: gastos, loading: lg, error: eg } = useTable('gastos_campo', { filters: cicloFilter, enabled })
-  const { data: basculas, loading: lb, error: eb } = useTable('basculas', { filters: cicloFilter, enabled })
+  const { data: basculas, loading: lb, error: eb } = useTable('basculas', {
+    filters: cicloFilter,
+    orderBy: { column: 'fecha', ascending: false },
+    enabled
+  })
   const { data: secados, loading: ls, error: es } = useTable('secados', { filters: cicloFilter, enabled })
   const { data: embodegados, loading: le, error: ee } = useTable('embodegados', { filters: cicloFilter, enabled })
   const { data: turnos, loading: lt, error: et } = useTable('turnos_trillo', { filters: cicloFilter, enabled })
@@ -49,6 +54,10 @@ export default function Dashboard() {
   const anyFetchError = eg ?? eb ?? es ?? ee ?? et ?? ev
 
   const resumen = useMemo(() => {
+    // Turnos en estado 'parcial' (molienda incompleta) no cuentan en ningún
+    // total financiero ni de derivados hasta que pasan a 'completado'.
+    const turnosCompletados = turnos.filter((t) => t.estado !== 'parcial')
+
     const gastosCampoTotal = sumar(gastos, 'monto')
     const fleteTotal = sumar(basculas, 'costo_flete_total')
     const granzaTotal = sumar(basculas, 'costo_granza_total')
@@ -60,22 +69,31 @@ export default function Dashboard() {
       (sum, e) => sum + (Number(e.precio_saco) || 0) * (Number(e.sacos) || 0),
       0
     )
-    const trilladoTotal = turnos.reduce(
+    const trilladoTotal = turnosCompletados.reduce(
       (sum, t) => sum + (Number(t.precio_trillado_qq) || 0) * (Number(t.qq_totales) || 0) + (Number(t.costo_llenado_pila) || 0),
       0
     )
 
-    const gastosTotal = gastosCampoTotal + fleteTotal + granzaTotal + secadoTotal + embodegadoTotal + trilladoTotal
+    // "Gastos operativos" es todo el costo de operar el ciclo; "Compra de
+    // granza a terceros" es dinero gastado comprando materia prima de otros
+    // productores (solo aplica a viajes origen_viaje === 'comprado'). Se
+    // muestran por separado en la UI, pero Utilidad neta usa la suma de
+    // ambos — igual que antes.
+    const gastosOperativos = gastosCampoTotal + fleteTotal + secadoTotal + embodegadoTotal + trilladoTotal
+    const compraGranzaTotal = granzaTotal
+    const gastosTotal = gastosOperativos + compraGranzaTotal
     const ingresosTotal = ventas.reduce((sum, v) => sum + (Number(v.qq_vendidos) || 0) * (Number(v.precio_qq) || 0), 0)
     const utilidadNeta = ingresosTotal - gastosTotal
 
     const qqGranza = sumar(basculas, 'qq_neto')
-    const qqSecos = sumar(secadosVigentes(secados), 'qq_seco')
+    // Solo secados en estado 'seco' cuentan como producción terminada — un
+    // lote 'en_proceso' o 'preseco' todavía no mueve estos números.
+    const qqSecos = sumar(secadosFinalizados(secados), 'qq_seco')
     const merma = calcularMerma(qqGranza, qqSecos)
     const mermaPct = qqGranza ? (merma / qqGranza) * 100 : null
 
     const derivadosTotales = DERIVADOS_KEYS.reduce((acc, key) => {
-      acc[key] = turnos.reduce((sum, t) => sum + (Number(t.derivados?.[key]) || 0), 0)
+      acc[key] = turnosCompletados.reduce((sum, t) => sum + (Number(t.derivados?.[key]) || 0), 0)
       return acc
     }, {})
     const qqArrozEntero = derivadosTotales.arroz_entero || 0
@@ -86,6 +104,8 @@ export default function Dashboard() {
     const margenPorQq = calcularMargenPorQq(precioVentaPromedio, costoPorQqSeco)
 
     return {
+      gastosOperativos,
+      compraGranzaTotal,
       gastosTotal,
       ingresosTotal,
       utilidadNeta,
@@ -114,6 +134,59 @@ export default function Dashboard() {
       .slice(0, 6)
   }, [basculas, secados, embodegados, turnos])
 
+  const fechasFueraDeRango = useMemo(() => {
+    if (!selectedCiclo) return { count: 0, tablas: [] }
+    const revisar = [
+      [gastos, 'Gastos de campo'],
+      [basculas, 'Básculas'],
+      [secados, 'Secados'],
+      [embodegados, 'Embodegados'],
+      [turnos, 'Turnos de trillo'],
+      [ventas, 'Ventas']
+    ]
+    let count = 0
+    const tablas = []
+    for (const [rows, label] of revisar) {
+      const fuera = rows.filter((r) => fechaFueraDeCiclo(r.fecha, selectedCiclo)).length
+      if (fuera > 0) {
+        count += fuera
+        tablas.push(label)
+      }
+    }
+    return { count, tablas }
+  }, [gastos, basculas, secados, embodegados, turnos, ventas, selectedCiclo])
+
+  // Cuántas fincas distintas tienen actividad real en este ciclo. La
+  // mayoría de ciclos hoy son de una sola finca, así que el desglose por
+  // finca no vale la pena mostrarlo aquí salvo que realmente haya más de
+  // una — para eso está la vista completa en Reportes.
+  const fincasEnCicloCount = useMemo(() => {
+    const claves = new Set()
+    for (const rows of [gastos, basculas, secados, embodegados, turnos, ventas]) {
+      for (const r of rows) claves.add(r.finca_id ?? null)
+    }
+    return claves.size
+  }, [gastos, basculas, secados, embodegados, turnos, ventas])
+
+  const pendientes = useMemo(() => {
+    const basculaIdsConSecado = new Set(secados.map((s) => String(s.bascula_id)))
+    const pendientesSecado = basculas.filter((b) => !basculaIdsConSecado.has(String(b.id)))
+
+    const basculaIdsEnTurno = new Set(turnos.flatMap((t) => (Array.isArray(t.bascula_ids) ? t.bascula_ids : []).map(String)))
+    const pendientesTrillar = embodegados.filter((e) => !basculaIdsEnTurno.has(String(e.bascula_id)))
+
+    const basculaIdsConEmbodegado = new Set(embodegados.map((e) => String(e.bascula_id)))
+    const pendientesEmbodegar = secados.filter(
+      (s) => s.estado === 'seco' && !basculaIdsConEmbodegado.has(String(s.bascula_id))
+    )
+
+    return {
+      secado: { count: pendientesSecado.length, qq: sumar(pendientesSecado, 'qq_neto') },
+      trillar: { count: pendientesTrillar.length, qq: sumar(pendientesTrillar, 'qq_embodegados') },
+      embodegar: { count: pendientesEmbodegar.length, qq: sumar(pendientesEmbodegar, 'qq_seco') }
+    }
+  }, [basculas, secados, embodegados, turnos])
+
   if (ciclosError && ciclos.length === 0) {
     return <ErrorState error={ciclosError} />
   }
@@ -135,9 +208,14 @@ export default function Dashboard() {
       {anyFetchError && (
         <div className="stale-banner">⚠️ Algunos datos no se pudieron cargar. {anyFetchError.message}</div>
       )}
+      {fechasFueraDeRango.count > 0 && (
+        <div className="stale-banner">
+          ⚠️ {fechasFueraDeRango.count} registro{fechasFueraDeRango.count === 1 ? '' : 's'} ({fechasFueraDeRango.tablas.join(', ')})
+          con fecha fuera del rango del ciclo ({rangoCicloTexto(selectedCiclo)}) — los totales pueden incluir datos mal asignados.
+        </div>
+      )}
       <div className="kpi-grid">
         <KPICard label="Ingresos" value={formatCordoba(resumen.ingresosTotal)} icon="💰" tone="green" />
-        <KPICard label="Gastos" value={formatCordoba(resumen.gastosTotal)} icon="📉" tone="red" />
         <KPICard
           label="Utilidad neta"
           value={formatCordoba(resumen.utilidadNeta)}
@@ -145,6 +223,36 @@ export default function Dashboard() {
           tone={resumen.utilidadNeta >= 0 ? 'green' : 'red'}
         />
         <KPICard label="Producción" value={formatQq(resumen.qqSecos)} icon="🌾" tone="teal" sub={`${formatQq(resumen.qqGranza)} granza`} />
+      </div>
+
+      {fincasEnCicloCount > 1 && (
+        <div className="stale-banner">
+          ℹ️ Este ciclo tiene actividad en {fincasEnCicloCount} fincas distintas. Estos números son el total combinado —
+          {' '}
+          <button
+            onClick={() => navigate('/app/reportes')}
+            style={{
+              font: 'inherit',
+              color: 'inherit',
+              textDecoration: 'underline',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer'
+            }}
+          >
+            ver el desglose por finca en Reportes
+          </button>
+          .
+        </div>
+      )}
+      <div className="section-header">
+        <h2>Desglose de gastos</h2>
+      </div>
+      <div className="card card-pad">
+        <StatRow icon="🧑‍🌾" label="Gastos operativos" value={formatCordoba(resumen.gastosOperativos)} />
+        <StatRow icon="🌾" label="Compra de granza a terceros" value={formatCordoba(resumen.compraGranzaTotal)} />
+        <StatRow icon="📉" label="Total gastos" value={formatCordoba(resumen.gastosTotal)} />
       </div>
 
       <div className="cost-strip">
@@ -175,6 +283,27 @@ export default function Dashboard() {
         {QUICK_ACTIONS.map((action) => (
           <ActionButton key={action.key} icon={action.icon} label={action.label} onClick={() => navigate(action.path)} />
         ))}
+      </div>
+
+      <div className="section-header">
+        <h2>Pendientes de hoy</h2>
+      </div>
+      <div className="card card-pad">
+        <StatRow
+          icon="☀️"
+          label="Pendientes de secado"
+          value={`${pendientes.secado.count} viaje${pendientes.secado.count === 1 ? '' : 's'} · ${formatQq(pendientes.secado.qq, 1)}`}
+        />
+        <StatRow
+          icon="🏭"
+          label="Pendientes de trillar"
+          value={`${pendientes.trillar.count} lote${pendientes.trillar.count === 1 ? '' : 's'} · ${formatQq(pendientes.trillar.qq, 1)}`}
+        />
+        <StatRow
+          icon="📦"
+          label="Pendientes de embodegar"
+          value={`${pendientes.embodegar.count} lote${pendientes.embodegar.count === 1 ? '' : 's'} · ${formatQq(pendientes.embodegar.qq, 1)}`}
+        />
       </div>
 
       <div className="section-header">
