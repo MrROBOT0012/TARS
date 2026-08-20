@@ -9,6 +9,7 @@ import AppLayout from './components/layout/AppLayout.jsx'
 import Dashboard from './modules/Dashboard/Dashboard.jsx'
 import Ciclos from './modules/Ciclos/Ciclos.jsx'
 import Fincas from './modules/Fincas/Fincas.jsx'
+import Financiamiento from './modules/Financiamiento/Financiamiento.jsx'
 import Campo from './modules/Campo/Campo.jsx'
 import Cosecha from './modules/Cosecha/Cosecha.jsx'
 import Bascula from './modules/Bascula/Bascula.jsx'
@@ -50,6 +51,7 @@ function Gate() {
           <Route index element={<Dashboard />} />
           <Route path="ciclos" element={<Ciclos />} />
           <Route path="fincas" element={<Fincas />} />
+          <Route path="financiamiento" element={<Financiamiento />} />
           <Route path="campo" element={<Campo />} />
           <Route path="cosecha" element={<Cosecha />} />
           <Route path="bascula" element={<Bascula />} />

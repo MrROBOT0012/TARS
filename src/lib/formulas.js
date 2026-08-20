@@ -1,3 +1,5 @@
+import { parseCalendarDate } from './formatters'
+
 export const HUMEDAD_OBJETIVO_ESTANDAR = 12.5
 
 /**
@@ -294,4 +296,126 @@ export function computePLParaCiclo(cicloId, { cosechas, gastos, basculas, secado
     trilladoContribucion: costo,
     derivadosContribucion: derivados
   })
+}
+
+// ---------------------------------------------------------------------
+// Financiamiento (financed-finca settlement)
+// ---------------------------------------------------------------------
+
+const MS_POR_DIA = 24 * 60 * 60 * 1000
+
+/**
+ * Daily simple-interest rate implied by a finca's tasa_interes +
+ * tasa_interes_periodo. 'anual' divides by 365, 'mensual' by 30 (the usual
+ * informal-lending convention — not actual days-in-month). Returns 0 if
+ * interest doesn't apply or no rate is set, so callers never need a
+ * separate "is interest even on" branch.
+ */
+export function tasaDiariaFinanciamiento(finca) {
+  if (!finca?.interes_aplica) return 0
+  const tasa = Number(finca.tasa_interes)
+  if (!Number.isFinite(tasa) || tasa <= 0) return 0
+  const divisor = finca.tasa_interes_periodo === 'mensual' ? 30 : 365
+  return tasa / 100 / divisor
+}
+
+/**
+ * Walks a finca's financiamiento movements in chronological order,
+ * maintaining a running principal balance (adelanto adds, abono/aporte
+ * subtract) and — if the finca has interes_aplica — simple interest
+ * prorated daily on whatever the principal actually was during each
+ * interval, recalculated every time a movement changes it. Interest is
+ * tracked separately from principal (simple, not compound: accrued
+ * interest never itself accrues interest). The final interval runs from
+ * the last movement to `fechaCorte` (defaults to today), so the balance
+ * reflects interest accrued right up to "now" even between movements.
+ *
+ * A movement with a future/negative interval (bad data) contributes 0
+ * interest for that interval rather than going negative.
+ */
+export function calcularSaldoFinanciamiento(movimientos, finca, fechaCorte = new Date()) {
+  const ordenados = [...(movimientos ?? [])].sort(
+    (a, b) => parseCalendarDate(a.fecha) - parseCalendarDate(b.fecha)
+  )
+  const tasaDiaria = tasaDiariaFinanciamiento(finca)
+
+  let principal = 0
+  let interesAcumulado = 0
+  let fechaAnterior = null
+  const historial = []
+
+  for (const mov of ordenados) {
+    const fechaMov = parseCalendarDate(mov.fecha)
+    if (fechaAnterior && tasaDiaria > 0 && principal > 0) {
+      const dias = Math.max(0, Math.round((fechaMov - fechaAnterior) / MS_POR_DIA))
+      interesAcumulado += principal * tasaDiaria * dias
+    }
+    const monto = Number(mov.monto) || 0
+    principal += mov.tipo === 'adelanto' ? monto : -monto
+    fechaAnterior = fechaMov
+    historial.push({ ...mov, saldoPrincipalDespues: principal, interesAcumuladoHasta: interesAcumulado })
+  }
+
+  if (fechaAnterior && tasaDiaria > 0 && principal > 0) {
+    const dias = Math.max(0, Math.round((fechaCorte - fechaAnterior) / MS_POR_DIA))
+    interesAcumulado += principal * tasaDiaria * dias
+  }
+
+  return {
+    historial,
+    saldoPrincipal: principal,
+    interesAcumulado,
+    saldoTotal: principal + interesAcumulado
+  }
+}
+
+/**
+ * Value of the granza a finca has actually delivered, priced. Only counts
+ * básculas where precio_granza_qq is set — in this schema that field is
+ * only ever captured when origen_viaje = 'comprado' (see Bascula.jsx), so a
+ * financed producer's delivery must be logged that way to count here. Also
+ * returns how many qq came in with no price, so the caller can warn instead
+ * of silently under-counting.
+ */
+export function calcularValorGranzaEntregada(basculas) {
+  let valor = 0
+  let qqConPrecio = 0
+  let qqSinPrecio = 0
+  for (const b of basculas ?? []) {
+    const qq = Number(b.qq_neto) || 0
+    const precio = Number(b.precio_granza_qq) || 0
+    if (precio > 0) {
+      valor += qq * precio
+      qqConPrecio += qq
+    } else {
+      qqSinPrecio += qq
+    }
+  }
+  return { valor, qqConPrecio, qqSinPrecio }
+}
+
+/**
+ * Compares what's been financed (principal + accrued interest) against the
+ * priced value of granza delivered, and produces the settlement outcome:
+ * - valorGranza < totalFinanciado: the producer still owes the difference
+ *   (saldoPendiente) — this is not forced to zero, it's meant to carry
+ *   over to whatever ciclo comes next.
+ * - valorGranza > totalFinanciado: the surplus is split — the producer's
+ *   cut is porcentajeGananciaProductor% of it, the rest stays with the
+ *   operation.
+ */
+export function calcularLiquidacionFinanciamiento(totalFinanciado, valorGranza, porcentajeGananciaProductor) {
+  const diferencia = valorGranza - totalFinanciado
+  if (diferencia < 0) {
+    return { resultado: 'pendiente', saldoPendiente: -diferencia, superavit: 0, gananciaProductor: 0, gananciaOperacion: 0 }
+  }
+  const pct = Number(porcentajeGananciaProductor) || 0
+  const gananciaProductor = diferencia * (pct / 100)
+  return {
+    resultado: 'superavit',
+    saldoPendiente: 0,
+    superavit: diferencia,
+    gananciaProductor,
+    gananciaOperacion: diferencia - gananciaProductor
+  }
 }
