@@ -1,0 +1,67 @@
+.ciclo-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: var(--space-4);
+}
+
+.ciclo-select-list .ciclo-select-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #F5F7F5;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+.ciclo-select-item.checked {
+  background: #D4EDE1;
+  border-color: var(--green);
+}
+
+.ciclo-select-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ciclo-select-item .ciclo-select-checkbox {
+  width: 18px;
+  height: 18px;
+  max-width: none;
+  flex-shrink: 0;
+}
+
+.ciclo-select-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ciclo-select-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.ciclo-select-sub {
+  font-size: 12px;
+  color: var(--ink3);
+}
+
+.metrica-toggle-scroll {
+  gap: 8px;
+  margin-bottom: var(--space-3);
+}
+
+button.metrica-toggle {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  flex-shrink: 0;
+}

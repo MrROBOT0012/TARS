@@ -9,7 +9,8 @@ const STATUS_MAP = {
   propio: { label: 'Propio', tone: 'teal' },
   comprado: { label: 'Comprado', tone: 'blue' },
   medido: { label: 'Medido', tone: 'green' },
-  estimado: { label: 'Estimado (repartido)', tone: 'amber' }
+  estimado: { label: 'Estimado (repartido)', tone: 'amber' },
+  en_curso: { label: 'En curso', tone: 'amber' }
 }
 
 export default function StatusChip({ status }) {

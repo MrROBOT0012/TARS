@@ -15,6 +15,7 @@ import Bascula from './modules/Bascula/Bascula.jsx'
 import Proceso from './modules/Proceso/Proceso.jsx'
 import Ventas from './modules/Ventas/Ventas.jsx'
 import Reportes from './modules/Reportes/Reportes.jsx'
+import Comparativa from './modules/Comparativa/Comparativa.jsx'
 
 function Gate() {
   const { session, loading } = useAuth()
@@ -55,6 +56,7 @@ function Gate() {
           <Route path="proceso" element={<Proceso />} />
           <Route path="ventas" element={<Ventas />} />
           <Route path="reportes" element={<Reportes />} />
+          <Route path="comparativa" element={<Comparativa />} />
           <Route path="*" element={<Navigate to="/app" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -2,15 +2,10 @@ import { useMemo } from 'react'
 import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useTable } from '../../hooks/useData'
 import {
-  sumar,
-  calcularCostoPorQq,
-  calcularMargenPorQq,
-  calcularPrecioVentaPromedio,
-  calcularRendimientoAE,
-  calcularMerma,
-  secadosFinalizados,
   atribuirTurnosPorFinca,
-  DERIVADOS_KEYS
+  computePL,
+  derivadosVacios,
+  sumarAtribuciones
 } from '../../lib/formulas'
 import { formatCordoba, formatQq, formatPercent } from '../../lib/formatters'
 import KPICard from '../../components/ui/KPICard.jsx'
@@ -24,103 +19,6 @@ const DERIVADOS_LABELS = {
   puntilla: 'Puntilla',
   pallana: 'Pallana',
   fina: 'Fina'
-}
-
-function derivadosVacios() {
-  return Object.fromEntries(DERIVADOS_KEYS.map((k) => [k, 0]))
-}
-
-/** Sums every finca's turno attribution back into one ciclo-wide total. */
-function sumarAtribuciones(atribucionTurnos) {
-  let costo = 0
-  const derivados = derivadosVacios()
-  for (const { costo: c, derivados: d } of atribucionTurnos.values()) {
-    costo += c
-    for (const key of DERIVADOS_KEYS) derivados[key] += d[key]
-  }
-  return { costo, derivados }
-}
-
-/**
- * Computes the full P&L for one slice of records (either every record in
- * the ciclo, or just the ones belonging to a single finca). Kept as a pure
- * function so the ciclo-wide total and each per-finca breakdown share
- * identical math instead of two copies that could drift apart.
- *
- * Turno-derived numbers (trilladoTotal, derivados) are NOT computed from a
- * raw `turnos` array here — a turno has no trustworthy finca_id of its own
- * (it mills grain from básculas that can belong to different fincas), so
- * they're passed in pre-attributed via trilladoContribucion/
- * derivadosContribucion (see atribuirTurnosPorFinca in formulas.js).
- */
-function computePL({ cosechas, gastos, basculas, secados, embodegados, ventas, trilladoContribucion, derivadosContribucion }) {
-  const gastosCampoTotal = sumar(gastos, 'monto')
-  const fleteTotal = sumar(basculas, 'costo_flete_total')
-  const granzaTotal = sumar(basculas, 'costo_granza_total')
-  const secadoTotal = secados.reduce(
-    (sum, s) => sum + ((Number(s.precio_descargue) || 0) + (Number(s.precio_secado) || 0)) * (Number(s.qq_seco) || 0),
-    0
-  )
-  const embodegadoTotal = embodegados.reduce(
-    (sum, e) => sum + (Number(e.precio_saco) || 0) * (Number(e.sacos) || 0),
-    0
-  )
-  const trilladoTotal = trilladoContribucion
-
-  const gastosOperativos = gastosCampoTotal + fleteTotal + secadoTotal + embodegadoTotal + trilladoTotal
-  const gastosTotal = gastosOperativos + granzaTotal
-  const ingresosTotal = ventas.reduce((sum, v) => sum + (Number(v.qq_vendidos) || 0) * (Number(v.precio_qq) || 0), 0)
-  const utilidadNeta = ingresosTotal - gastosTotal
-
-  const qqCosechados = sumar(cosechas, 'qq_cosechados')
-  const qqGranza = sumar(basculas, 'qq_neto')
-  // Solo secados en estado 'seco' cuentan como producción terminada — un
-  // lote 'en_proceso' o 'preseco' todavía no mueve estos números.
-  const qqSecos = sumar(secadosFinalizados(secados), 'qq_seco')
-  const merma = calcularMerma(qqGranza, qqSecos)
-  const mermaPct = qqGranza ? (merma / qqGranza) * 100 : null
-
-  const derivadosTotales = derivadosContribucion
-  const qqArrozEntero = derivadosTotales.arroz_entero || 0
-  const rendimientoAE = calcularRendimientoAE(qqArrozEntero, qqSecos)
-
-  const costoPorQqSeco = calcularCostoPorQq(gastosTotal, qqSecos)
-  const costoPorQqAE = calcularCostoPorQq(gastosTotal, qqArrozEntero)
-  const precioVentaPromedio = calcularPrecioVentaPromedio(ventas)
-  const margenPorQq = calcularMargenPorQq(precioVentaPromedio, costoPorQqSeco)
-
-  const ventasPorDerivado = DERIVADOS_KEYS.map((key) => {
-    const items = ventas.filter((v) => v.derivado === key)
-    const qq = sumar(items, 'qq_vendidos')
-    const ingresos = items.reduce((sum, v) => sum + (Number(v.qq_vendidos) || 0) * (Number(v.precio_qq) || 0), 0)
-    return { key, qq, ingresos, precioPromedio: qq ? ingresos / qq : null }
-  })
-
-  return {
-    gastosCampoTotal,
-    fleteTotal,
-    granzaTotal,
-    secadoTotal,
-    embodegadoTotal,
-    trilladoTotal,
-    gastosOperativos,
-    gastosTotal,
-    ingresosTotal,
-    utilidadNeta,
-    qqCosechados,
-    qqGranza,
-    qqSecos,
-    merma,
-    mermaPct,
-    derivadosTotales,
-    qqArrozEntero,
-    rendimientoAE,
-    costoPorQqSeco,
-    costoPorQqAE,
-    precioVentaPromedio,
-    margenPorQq,
-    ventasPorDerivado
-  }
 }
 
 /**

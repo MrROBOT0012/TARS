@@ -82,6 +82,10 @@ export function secadosFinalizados(secados) {
 
 export const DERIVADOS_KEYS = ['arroz_entero', 'semolina', 'puntilla', 'pallana', 'fina']
 
+export function derivadosVacios() {
+  return Object.fromEntries(DERIVADOS_KEYS.map((k) => [k, 0]))
+}
+
 /**
  * A turno_trillo has no finca_id of its own that can be trusted for P&L
  * attribution — it mills grain from whichever básculas (viajes) were
@@ -157,7 +161,7 @@ export function atribuirTurnosPorFinca(turnos, basculas) {
       if (!resultado.has(fincaId)) {
         resultado.set(fincaId, {
           costo: 0,
-          derivados: Object.fromEntries(DERIVADOS_KEYS.map((k) => [k, 0])),
+          derivados: derivadosVacios(),
           medido: true
         })
       }
@@ -171,4 +175,123 @@ export function atribuirTurnosPorFinca(turnos, basculas) {
   }
 
   return resultado
+}
+
+/** Sums every finca's turno attribution back into one combined total. */
+export function sumarAtribuciones(atribucionTurnos) {
+  let costo = 0
+  const derivados = derivadosVacios()
+  for (const { costo: c, derivados: d } of atribucionTurnos.values()) {
+    costo += c
+    for (const key of DERIVADOS_KEYS) derivados[key] += d[key]
+  }
+  return { costo, derivados }
+}
+
+/**
+ * Computes the full P&L for one slice of records — every record in a ciclo,
+ * just the ones belonging to a single finca within a ciclo, or (via
+ * Comparativa) a whole separate ciclo entirely. Kept as a single pure
+ * function so Dashboard/Reportes/Comparativa numbers can never drift apart
+ * from independently-reimplemented copies of the same math.
+ *
+ * Turno-derived numbers (trilladoTotal, derivados) are NOT computed from a
+ * raw `turnos` array here — a turno has no trustworthy finca_id of its own
+ * (it mills grain from básculas that can belong to different fincas), so
+ * they're passed in pre-attributed via trilladoContribucion/
+ * derivadosContribucion — see atribuirTurnosPorFinca + sumarAtribuciones.
+ */
+export function computePL({ cosechas, gastos, basculas, secados, embodegados, ventas, trilladoContribucion, derivadosContribucion }) {
+  const gastosCampoTotal = sumar(gastos, 'monto')
+  const fleteTotal = sumar(basculas, 'costo_flete_total')
+  const granzaTotal = sumar(basculas, 'costo_granza_total')
+  const secadoTotal = secados.reduce(
+    (sum, s) => sum + ((Number(s.precio_descargue) || 0) + (Number(s.precio_secado) || 0)) * (Number(s.qq_seco) || 0),
+    0
+  )
+  const embodegadoTotal = embodegados.reduce(
+    (sum, e) => sum + (Number(e.precio_saco) || 0) * (Number(e.sacos) || 0),
+    0
+  )
+  const trilladoTotal = trilladoContribucion
+
+  const gastosOperativos = gastosCampoTotal + fleteTotal + secadoTotal + embodegadoTotal + trilladoTotal
+  const gastosTotal = gastosOperativos + granzaTotal
+  const ingresosTotal = ventas.reduce((sum, v) => sum + (Number(v.qq_vendidos) || 0) * (Number(v.precio_qq) || 0), 0)
+  const utilidadNeta = ingresosTotal - gastosTotal
+
+  const qqCosechados = sumar(cosechas, 'qq_cosechados')
+  const qqGranza = sumar(basculas, 'qq_neto')
+  // Solo secados en estado 'seco' cuentan como producción terminada — un
+  // lote 'en_proceso' o 'preseco' todavía no mueve estos números.
+  const qqSecos = sumar(secadosFinalizados(secados), 'qq_seco')
+  const merma = calcularMerma(qqGranza, qqSecos)
+  const mermaPct = qqGranza ? (merma / qqGranza) * 100 : null
+
+  const derivadosTotales = derivadosContribucion
+  const qqArrozEntero = derivadosTotales.arroz_entero || 0
+  const rendimientoAE = calcularRendimientoAE(qqArrozEntero, qqSecos)
+
+  const costoPorQqSeco = calcularCostoPorQq(gastosTotal, qqSecos)
+  const costoPorQqAE = calcularCostoPorQq(gastosTotal, qqArrozEntero)
+  const precioVentaPromedio = calcularPrecioVentaPromedio(ventas)
+  const margenPorQq = calcularMargenPorQq(precioVentaPromedio, costoPorQqSeco)
+
+  const ventasPorDerivado = DERIVADOS_KEYS.map((key) => {
+    const items = ventas.filter((v) => v.derivado === key)
+    const qq = sumar(items, 'qq_vendidos')
+    const ingresos = items.reduce((sum, v) => sum + (Number(v.qq_vendidos) || 0) * (Number(v.precio_qq) || 0), 0)
+    return { key, qq, ingresos, precioPromedio: qq ? ingresos / qq : null }
+  })
+
+  return {
+    gastosCampoTotal,
+    fleteTotal,
+    granzaTotal,
+    secadoTotal,
+    embodegadoTotal,
+    trilladoTotal,
+    gastosOperativos,
+    gastosTotal,
+    ingresosTotal,
+    utilidadNeta,
+    qqCosechados,
+    qqGranza,
+    qqSecos,
+    merma,
+    mermaPct,
+    derivadosTotales,
+    qqArrozEntero,
+    rendimientoAE,
+    costoPorQqSeco,
+    costoPorQqAE,
+    precioVentaPromedio,
+    margenPorQq,
+    ventasPorDerivado
+  }
+}
+
+/**
+ * Computes computePL() for one ciclo out of a larger unfiltered dataset
+ * spanning multiple ciclos (used by Comparativa) — filters all 7 tables to
+ * cicloId first, then runs the exact same turno-attribution + computePL
+ * pipeline Reportes.jsx uses for "the selected ciclo," so comparison
+ * numbers can never drift from what Reportes/Dashboard show individually.
+ */
+export function computePLParaCiclo(cicloId, { cosechas, gastos, basculas, secados, embodegados, turnos, ventas }) {
+  const filtro = (rows) => (rows ?? []).filter((r) => r.ciclo_id === cicloId)
+  const cBasculas = filtro(basculas)
+  const cTurnos = filtro(turnos)
+  const atribucionTurnos = atribuirTurnosPorFinca(cTurnos, cBasculas)
+  const { costo, derivados } = sumarAtribuciones(atribucionTurnos)
+  return computePL({
+    cosechas: filtro(cosechas),
+    gastos: filtro(gastos),
+    basculas: cBasculas,
+    secados: filtro(secados),
+    embodegados: filtro(embodegados),
+    ventas: filtro(ventas),
+    trilladoContribucion: costo,
+    derivadosContribucion: derivados
+  })
 }
