@@ -9,7 +9,10 @@ import {
   calcularPrecioVentaPromedio,
   calcularRendimientoAE,
   calcularMerma,
-  secadosFinalizados
+  secadosFinalizados,
+  calcularQqVendidos,
+  calcularPctProduccionVendida,
+  mensajeDivergenciaMargen
 } from '../../lib/formulas'
 import { fechaFueraDeCiclo, rangoCicloTexto } from '../../lib/cicloValidation'
 import { formatCordoba, formatQq, formatPercent } from '../../lib/formatters'
@@ -102,6 +105,8 @@ export default function Dashboard() {
     const costoPorQqSeco = calcularCostoPorQq(gastosTotal, qqSecos)
     const precioVentaPromedio = calcularPrecioVentaPromedio(ventas)
     const margenPorQq = calcularMargenPorQq(precioVentaPromedio, costoPorQqSeco)
+    const qqVendidos = calcularQqVendidos(ventas)
+    const pctProduccionVendida = calcularPctProduccionVendida(qqVendidos, qqSecos)
 
     return {
       gastosOperativos,
@@ -118,7 +123,9 @@ export default function Dashboard() {
       rendimientoAE,
       costoPorQqSeco,
       precioVentaPromedio,
-      margenPorQq
+      margenPorQq,
+      qqVendidos,
+      pctProduccionVendida
     }
   }, [gastos, basculas, secados, embodegados, turnos, ventas])
 
@@ -203,6 +210,8 @@ export default function Dashboard() {
     )
   }
 
+  const margenDivergenteMsg = mensajeDivergenciaMargen(resumen.utilidadNeta, resumen.margenPorQq)
+
   return (
     <div className="fade-in">
       {anyFetchError && (
@@ -269,12 +278,16 @@ export default function Dashboard() {
           </span>
         </div>
         <div className="cost-strip-item">
-          <span className="cost-strip-label">Margen / QQ</span>
+          <span className="cost-strip-label">Margen / QQ vendido</span>
           <span className={'cost-strip-value mono ' + (resumen.margenPorQq >= 0 ? 'positive' : 'negative')}>
             {resumen.margenPorQq != null ? formatCordoba(resumen.margenPorQq) : '—'}
           </span>
+          {resumen.pctProduccionVendida != null && (
+            <span className="cost-strip-caption">sobre {formatPercent(resumen.pctProduccionVendida)} de la producción vendida</span>
+          )}
         </div>
       </div>
+      {margenDivergenteMsg && <div className="info-banner">ℹ️ {margenDivergenteMsg}</div>}
 
       <div className="section-header">
         <h2>Acciones rápidas</h2>

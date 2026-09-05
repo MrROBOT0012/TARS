@@ -80,6 +80,12 @@
 }
 .cost-strip-value.positive { color: var(--green2); }
 .cost-strip-value.negative { color: #ea6b5c; }
+.cost-strip-caption {
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: normal;
+}
 
 @media (max-width: 480px) {
   .cost-strip {

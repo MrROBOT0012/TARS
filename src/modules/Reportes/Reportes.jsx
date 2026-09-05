@@ -5,7 +5,8 @@ import {
   atribuirTurnosPorFinca,
   computePL,
   derivadosVacios,
-  sumarAtribuciones
+  sumarAtribuciones,
+  mensajeDivergenciaMargen
 } from '../../lib/formulas'
 import { formatCordoba, formatQq, formatPercent } from '../../lib/formatters'
 import KPICard from '../../components/ui/KPICard.jsx'
@@ -119,6 +120,8 @@ export default function Reportes() {
     return fincaNombre(a.fincaId).localeCompare(fincaNombre(b.fincaId))
   })
 
+  const margenDivergenteMsg = mensajeDivergenciaMargen(report.utilidadNeta, report.margenPorQq)
+
   return (
     <div className="fade-in">
       {anyFetchError && (
@@ -166,12 +169,16 @@ export default function Reportes() {
           <span className="cost-strip-value mono">{report.costoPorQqAE != null ? formatCordoba(report.costoPorQqAE) : '—'}</span>
         </div>
         <div className="cost-strip-item">
-          <span className="cost-strip-label">Margen / QQ</span>
+          <span className="cost-strip-label">Margen / QQ vendido</span>
           <span className={'cost-strip-value mono ' + (report.margenPorQq >= 0 ? 'positive' : 'negative')}>
             {report.margenPorQq != null ? formatCordoba(report.margenPorQq) : '—'}
           </span>
+          {report.pctProduccionVendida != null && (
+            <span className="cost-strip-caption">sobre {formatPercent(report.pctProduccionVendida)} de la producción vendida</span>
+          )}
         </div>
       </div>
+      {margenDivergenteMsg && <div className="info-banner">ℹ️ {margenDivergenteMsg}</div>}
 
       <div className="section-header">
         <h2>Cadena de producción</h2>

@@ -297,6 +297,21 @@ table.data-table tbody tr:hover {
   font-weight: 600;
   margin-bottom: var(--space-3);
 }
+/* Same shape as .stale-banner but for context that isn't a problem to fix
+   (e.g. explaining two normal KPIs that look contradictory) — blue reads
+   as informational rather than "something needs your attention". */
+.info-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--blue-light);
+  color: var(--blue);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+}
 
 /* Loading */
 .loading-wrap {

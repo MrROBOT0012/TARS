@@ -35,6 +35,46 @@ export function calcularMargenPorQq(precioVentaPromedio, costoPorQqSeco) {
   return Number(precioVentaPromedio) - Number(costoPorQqSeco)
 }
 
+/**
+ * Total qq vendidos — the denominator margenPorQq is implicitly scoped to,
+ * as opposed to costoPorQqSeco's qqSecos (todo lo producido). Exposed
+ * separately so callers can show that scope instead of letting the two
+ * per-qq numbers look directly comparable when production hasn't fully
+ * sold yet.
+ */
+export function calcularQqVendidos(ventas) {
+  return sumar(ventas, 'qq_vendidos')
+}
+
+export function calcularPctProduccionVendida(qqVendidos, qqSecos) {
+  if (!qqSecos) return null
+  return (Number(qqVendidos) / Number(qqSecos)) * 100
+}
+
+/**
+ * True when utilidadNeta (costo de todo lo producido vs. ingreso de lo
+ * vendido hasta ahora) y margenPorQq (precio de lo vendido vs. costo de
+ * todo lo producido, por unidad) caen en signos opuestos — la señal de que
+ * queda producción ya costeada pero sin vender, así que ningún número por
+ * sí solo describe el resultado del ciclo.
+ */
+export function hayDivergenciaMargen(utilidadNeta, margenPorQq) {
+  if (utilidadNeta == null || margenPorQq == null) return false
+  return (utilidadNeta < 0 && margenPorQq > 0) || (utilidadNeta > 0 && margenPorQq < 0)
+}
+
+/**
+ * Explicación en lenguaje llano de la divergencia anterior, compartida por
+ * Dashboard y Reportes para que el texto nunca se desalinee entre pantallas.
+ */
+export function mensajeDivergenciaMargen(utilidadNeta, margenPorQq) {
+  if (!hayDivergenciaMargen(utilidadNeta, margenPorQq)) return null
+  if (margenPorQq > 0) {
+    return 'Todavía hay producción sin vender este ciclo, así que la utilidad neta aún no refleja el resultado completo — el margen por quintal ya vendido sí es positivo.'
+  }
+  return 'Todavía hay producción sin vender este ciclo, así que el margen por quintal vendido puede no representar el resultado final — la utilidad neta del ciclo completo sigue siendo positiva.'
+}
+
 export function calcularRendimientoAE(qqArrozEntero, qqSecos) {
   if (!qqSecos) return null
   return (Number(qqArrozEntero) / Number(qqSecos)) * 100
@@ -238,6 +278,8 @@ export function computePL({ cosechas, gastos, basculas, secados, embodegados, ve
   const costoPorQqAE = calcularCostoPorQq(gastosTotal, qqArrozEntero)
   const precioVentaPromedio = calcularPrecioVentaPromedio(ventas)
   const margenPorQq = calcularMargenPorQq(precioVentaPromedio, costoPorQqSeco)
+  const qqVendidos = calcularQqVendidos(ventas)
+  const pctProduccionVendida = calcularPctProduccionVendida(qqVendidos, qqSecos)
 
   const ventasPorDerivado = DERIVADOS_KEYS.map((key) => {
     const items = ventas.filter((v) => v.derivado === key)
@@ -269,6 +311,8 @@ export function computePL({ cosechas, gastos, basculas, secados, embodegados, ve
     costoPorQqAE,
     precioVentaPromedio,
     margenPorQq,
+    qqVendidos,
+    pctProduccionVendida,
     ventasPorDerivado
   }
 }
