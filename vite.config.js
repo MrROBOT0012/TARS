@@ -11,16 +11,14 @@ export default defineConfig({
       manifest: false,
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // Supabase REST/Auth responses carry financial data and session
+        // tokens — never cached, not even briefly. NetworkOnly is explicit
+        // about that so a future runtimeCaching addition doesn't silently
+        // start caching them again.
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/audjnwaqrleujseorzcd\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'tars-supabase-cache',
-              networkTimeoutSeconds: 8,
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
-              cacheableResponse: { statuses: [0, 200] }
-            }
+            urlPattern: /^https:\/\/audjnwaqrleujseorzcd\.supabase\.co\/(rest|auth)\/.*/i,
+            handler: 'NetworkOnly'
           }
         ]
       },

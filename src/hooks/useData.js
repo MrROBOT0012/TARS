@@ -22,6 +22,17 @@ function writeCache(key, data) {
   }
 }
 
+/** Wipes every cached query result — called on logout (manual or session-expiry) so a signed-out session can't leak financial data via localStorage inspection. */
+export function clearAllCache() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(CACHE_PREFIX)) localStorage.removeItem(key)
+    }
+  } catch {
+    /* storage unavailable, ignore */
+  }
+}
+
 /**
  * Fetch rows from a Supabase table with in-memory + localStorage caching
  * so the last successful result is available offline.

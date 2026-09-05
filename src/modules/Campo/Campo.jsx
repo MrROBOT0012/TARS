@@ -5,6 +5,7 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
+import { useConfirm } from '../../hooks/useConfirm.jsx'
 import { confirmarFechaFueraDeCiclo } from '../../lib/cicloValidation'
 import { formatCordoba, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
@@ -38,6 +39,7 @@ export default function Campo() {
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
   const { markStepDone } = useOnboarding()
+  const confirm = useConfirm()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -67,7 +69,7 @@ export default function Campo() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo)) return
+    if (!(await confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo, confirm))) return
     setSaving(true)
     setError('')
     try {
@@ -97,7 +99,7 @@ export default function Campo() {
   }
 
   async function handleDelete(row) {
-    if (!confirm('¿Eliminar este gasto de campo?')) return
+    if (!(await confirm('¿Eliminar este gasto de campo?', { title: 'Eliminar gasto', confirmLabel: 'Eliminar', danger: true }))) return
     try {
       await deleteRow('gastos_campo', row.id)
       showSuccess('Gasto eliminado')

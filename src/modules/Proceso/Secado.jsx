@@ -4,6 +4,7 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
+import { useConfirm } from '../../hooks/useConfirm.jsx'
 import { calcularQqSeco, calcularMerma, findPresecoRecord, HUMEDAD_OBJETIVO_ESTANDAR } from '../../lib/formulas'
 import { confirmarFechaFueraDeCiclo } from '../../lib/cicloValidation'
 import { formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
@@ -52,6 +53,7 @@ export default function Secado({ autoOpenNew }) {
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
   const { markStepDone } = useOnboarding()
+  const confirm = useConfirm()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -124,7 +126,7 @@ export default function Secado({ autoOpenNew }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo)) return
+    if (!(await confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo, confirm))) return
     setSaving(true)
     setError('')
     try {
@@ -161,7 +163,7 @@ export default function Secado({ autoOpenNew }) {
   }
 
   async function handleDelete(row) {
-    if (!confirm('¿Eliminar este registro de secado?')) return
+    if (!(await confirm('¿Eliminar este registro de secado?', { title: 'Eliminar secado', confirmLabel: 'Eliminar', danger: true }))) return
     try {
       await deleteRow('secados', row.id)
       showSuccess('Secado eliminado')

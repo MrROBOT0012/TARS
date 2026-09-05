@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { clearAllCache } from './useData'
 import { useToast } from './useToast.jsx'
 
 const AuthContext = createContext(null)
@@ -40,6 +41,7 @@ export function AuthProvider({ children }) {
 
   const signOut = useCallback(async () => {
     manualSignOutRef.current = true
+    clearAllCache()
     await supabase.auth.signOut()
   }, [])
 

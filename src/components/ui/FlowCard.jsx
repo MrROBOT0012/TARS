@@ -8,6 +8,8 @@ const STEPS = [
 /**
  * status: object with boolean/string per step, e.g.
  * { bascula: true, secado: 'active', embodegado: false, turno: false }
+ *
+ * `qq` is expected pre-formatted via formatQq() (already includes the " qq" unit).
  */
 export default function FlowCard({ ticket, productor, qq, status, onClick }) {
   const stepState = (key) => {
@@ -24,7 +26,7 @@ export default function FlowCard({ ticket, productor, qq, status, onClick }) {
           <div className="flow-card-title mono">#{ticket}</div>
           <div className="flow-card-sub">{productor}</div>
         </div>
-        <div className="flow-card-sub mono">{qq} qq</div>
+        <div className="flow-card-sub mono">{qq}</div>
       </div>
       <div className="flow-steps">
         {STEPS.map((step, idx) => (

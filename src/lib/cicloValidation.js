@@ -32,13 +32,15 @@ export function rangoCicloTexto(ciclo) {
 
 /**
  * Data-entry gate: if `fecha` is outside the ciclo's bounds, blocks on a
- * native confirm() dialog (same pattern already used for delete
- * confirmations) so the user can't miss the warning, but still lets them
- * proceed on purpose. Returns true when the save should continue.
+ * confirmation dialog so the user can't miss the warning, but still lets
+ * them proceed on purpose. `confirmFn` is the app's in-app confirm() (from
+ * useConfirm()), not the native window.confirm — callers must await this.
+ * Returns true when the save should continue.
  */
-export function confirmarFechaFueraDeCiclo(fecha, ciclo) {
+export async function confirmarFechaFueraDeCiclo(fecha, ciclo, confirmFn) {
   if (!fechaFueraDeCiclo(fecha, ciclo)) return true
-  return confirm(
-    `⚠️ La fecha (${formatDate(fecha)}) está fuera del rango del ciclo "${ciclo.nombre}" (${rangoCicloTexto(ciclo)}).\n\n¿Guardar de todas formas?`
+  return confirmFn(
+    `La fecha (${formatDate(fecha)}) está fuera del rango del ciclo "${ciclo.nombre}" (${rangoCicloTexto(ciclo)}).\n\n¿Guardar de todas formas?`,
+    { title: '⚠️ Fecha fuera de rango', confirmLabel: 'Guardar de todas formas' }
   )
 }

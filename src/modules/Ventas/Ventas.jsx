@@ -5,7 +5,9 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
+import { useConfirm } from '../../hooks/useConfirm.jsx'
 import { confirmarFechaFueraDeCiclo } from '../../lib/cicloValidation'
+import { calcularQqDisponibleParaVenta } from '../../lib/formulas'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
@@ -38,21 +40,29 @@ export default function Ventas() {
   const autoOpenNew = searchParams.get('new') === '1'
   const { selectedCicloId, selectedCiclo, ciclos, error: ciclosError } = useCiclo()
   const { data: fincas } = useTable('fincas', { orderBy: { column: 'nombre' } })
+  // Ventas, turnos y básculas se traen sin filtrar por ciclo: el stock
+  // disponible para vender es acumulado (lo producido puede venderse en
+  // cualquier ciclo posterior, no solo en el que se produjo), así que la
+  // validación de disponibilidad necesita ver el historial completo.
   const {
     data: ventas,
     loading,
     error: fetchError,
     stale,
     refetch
-  } = useTable('ventas', {
-    filters: [['ciclo_id', 'eq', selectedCicloId]],
-    orderBy: { column: 'fecha', ascending: false },
-    enabled: !!selectedCicloId
-  })
+  } = useTable('ventas', { orderBy: { column: 'fecha', ascending: false } })
+  const { data: turnos, loading: turnosLoading } = useTable('turnos_trillo', {})
+  const { data: basculas, loading: basculasLoading } = useTable('basculas', {})
+
+  const ventasDelCiclo = useMemo(
+    () => ventas.filter((v) => v.ciclo_id === selectedCicloId),
+    [ventas, selectedCicloId]
+  )
 
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
   const { markStepDone } = useOnboarding()
+  const confirm = useConfirm()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -83,16 +93,41 @@ export default function Ventas() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo)) return
-    setSaving(true)
+    if (!(await confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo, confirm))) return
     setError('')
+
+    // Sin turnos/básculas todavía cargados no hay forma de saber cuánto se
+    // ha producido — bloquear con un mensaje claro en vez de calcular
+    // "disponible: 0" y rechazar una venta que en realidad sí cabe.
+    if (turnosLoading || basculasLoading) {
+      setError('Todavía se están cargando los datos de producción — espera un momento e intenta de nuevo.')
+      return
+    }
+
+    const fincaId = form.finca_id || null
+    const qqVendidos = form.qq_vendidos ? Number(form.qq_vendidos) : 0
+    const disponible = calcularQqDisponibleParaVenta(
+      fincaId,
+      form.derivado,
+      { turnos, basculas, ventas },
+      editing === 'new' ? null : editing
+    )
+    if (qqVendidos > disponible + 0.01) {
+      setError(
+        `No hay suficiente ${DERIVADOS_LABELS[form.derivado]} disponible para ${fincaNombre(fincaId)}. ` +
+          `Disponible: ${formatQq(disponible, 1)} — estás intentando vender ${formatQq(qqVendidos, 1)}.`
+      )
+      return
+    }
+
+    setSaving(true)
     try {
       const values = {
         fecha: form.fecha,
-        finca_id: form.finca_id || null,
+        finca_id: fincaId,
         ciclo_id: selectedCicloId,
         derivado: form.derivado,
-        qq_vendidos: form.qq_vendidos ? Number(form.qq_vendidos) : 0,
+        qq_vendidos: qqVendidos,
         precio_qq: form.precio_qq ? Number(form.precio_qq) : 0,
         comprador: form.comprador || null,
         notas: form.notas || null
@@ -114,7 +149,7 @@ export default function Ventas() {
   }
 
   async function handleDelete(row) {
-    if (!confirm('¿Eliminar este registro de venta?')) return
+    if (!(await confirm('¿Eliminar este registro de venta?', { title: 'Eliminar venta', confirmLabel: 'Eliminar', danger: true }))) return
     try {
       await deleteRow('ventas', row.id)
       showSuccess('Venta eliminada')
@@ -126,8 +161,8 @@ export default function Ventas() {
 
   const fincaNombre = (id) => fincas.find((f) => f.id === id)?.nombre ?? '—'
   const totalIngresos = useMemo(
-    () => ventas.reduce((sum, v) => sum + (Number(v.qq_vendidos) || 0) * (Number(v.precio_qq) || 0), 0),
-    [ventas]
+    () => ventasDelCiclo.reduce((sum, v) => sum + (Number(v.qq_vendidos) || 0) * (Number(v.precio_qq) || 0), 0),
+    [ventasDelCiclo]
   )
 
   if (ciclosError && !ciclos.length) {
@@ -154,7 +189,7 @@ export default function Ventas() {
         <div className="loading-wrap">
           <span className="spinner" />
         </div>
-      ) : fetchError && ventas.length === 0 ? (
+      ) : fetchError && ventasDelCiclo.length === 0 ? (
         <ErrorState error={fetchError} onRetry={refetch} />
       ) : (
         <>
@@ -162,7 +197,7 @@ export default function Ventas() {
           <div className="stale-banner">⚠️ Mostrando datos guardados sin conexión. {fetchError.message}</div>
         )}
         <ListView
-          data={ventas}
+          data={ventasDelCiclo}
           emptyMessage="No hay ventas registradas en este ciclo"
           columns={[
             { key: 'fecha', label: 'Fecha', render: (r) => formatDate(r.fecha) },

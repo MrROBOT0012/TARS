@@ -4,6 +4,7 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
+import { useConfirm } from '../../hooks/useConfirm.jsx'
 import { formatDate, formatDateInput } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
 import StatusChip from '../../components/ui/StatusChip.jsx'
@@ -26,6 +27,7 @@ export default function Ciclos() {
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
   const { markStepDone } = useOnboarding()
+  const confirm = useConfirm()
 
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
@@ -80,7 +82,7 @@ export default function Ciclos() {
   }
 
   async function handleDelete(row) {
-    if (!confirm(`¿Eliminar el ciclo "${row.nombre}"?`)) return
+    if (!(await confirm(`¿Eliminar el ciclo "${row.nombre}"?`, { title: 'Eliminar ciclo', confirmLabel: 'Eliminar', danger: true }))) return
     try {
       await deleteRow('ciclos', row.id)
       showSuccess('Ciclo eliminado')

@@ -4,6 +4,7 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
+import { useConfirm } from '../../hooks/useConfirm.jsx'
 import { confirmarFechaFueraDeCiclo } from '../../lib/cicloValidation'
 import { DERIVADOS_KEYS, fincasInvolucradasEnTurno } from '../../lib/formulas'
 import { formatCordoba, formatQq, formatDate, formatDateInput, todayInput } from '../../lib/formatters'
@@ -60,6 +61,7 @@ export default function Turnos({ autoOpenNew }) {
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
   const { markStepDone } = useOnboarding()
+  const confirm = useConfirm()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -125,7 +127,7 @@ export default function Turnos({ autoOpenNew }) {
    * a proportional estimate (see atribucionesTurno), not an exact
    * measurement — the user must consciously acknowledge that before saving.
    */
-  function confirmarMezclaFinanciada() {
+  async function confirmarMezclaFinanciada() {
     const fincaIds = fincasInvolucradasEnTurno({ bascula_ids: form.bascula_ids }, basculas)
     const tiposInvolucrados = fincaIds.map((id) => fincas.find((f) => f.id === id)?.tipo?.toLowerCase() ?? null)
     const hayFinanciada = tiposInvolucrados.includes('financiada')
@@ -137,15 +139,16 @@ export default function Turnos({ autoOpenNew }) {
       .map((id) => fincas.find((f) => f.id === id)?.nombre ?? '—')
       .join(', ')
     return confirm(
-      `⚠️ Este turno mezcla básculas de una finca financiada (${nombresFinanciadas}) con otra(s) finca(s) no financiada(s).\n\n` +
-        `Los derivados y el costo de trillado para la finca financiada serán una estimación proporcional por qq, no una medición exacta.\n\n¿Guardar de todas formas?`
+      `Este turno mezcla básculas de una finca financiada (${nombresFinanciadas}) con otra(s) finca(s) no financiada(s).\n\n` +
+        `Los derivados y el costo de trillado para la finca financiada serán una estimación proporcional por qq, no una medición exacta.\n\n¿Guardar de todas formas?`,
+      { title: '⚠️ Turno mixto', confirmLabel: 'Guardar de todas formas' }
     )
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo)) return
-    if (!confirmarMezclaFinanciada()) return
+    if (!(await confirmarFechaFueraDeCiclo(form.fecha, selectedCiclo, confirm))) return
+    if (!(await confirmarMezclaFinanciada())) return
     setSaving(true)
     setError('')
     try {
@@ -184,7 +187,7 @@ export default function Turnos({ autoOpenNew }) {
   }
 
   async function handleDelete(row) {
-    if (!confirm('¿Eliminar este turno de trillo?')) return
+    if (!(await confirm('¿Eliminar este turno de trillo?', { title: 'Eliminar turno', confirmLabel: 'Eliminar', danger: true }))) return
     try {
       await deleteRow('turnos_trillo', row.id)
       showSuccess('Turno de trillo eliminado')

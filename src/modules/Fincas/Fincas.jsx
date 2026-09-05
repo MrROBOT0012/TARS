@@ -3,6 +3,7 @@ import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
 import { useOnboarding } from '../../hooks/useOnboarding.jsx'
+import { useConfirm } from '../../hooks/useConfirm.jsx'
 import { calcularSaldoFinanciamiento } from '../../lib/formulas'
 import { formatCordoba, formatNumber } from '../../lib/formatters'
 import ListView from '../../components/ui/ListView.jsx'
@@ -54,6 +55,7 @@ export default function Fincas() {
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
   const { markStepDone } = useOnboarding()
+  const confirm = useConfirm()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
@@ -120,7 +122,7 @@ export default function Fincas() {
   }
 
   async function handleDelete(row) {
-    if (!confirm(`¿Eliminar la finca "${row.nombre}"?`)) return
+    if (!(await confirm(`¿Eliminar la finca "${row.nombre}"?`, { title: 'Eliminar finca', confirmLabel: 'Eliminar', danger: true }))) return
     try {
       await deleteRow('fincas', row.id)
       showSuccess('Finca eliminada')

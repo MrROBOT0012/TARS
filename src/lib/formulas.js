@@ -230,6 +230,40 @@ export function sumarAtribuciones(atribucionTurnos) {
   return { costo, derivados }
 }
 
+// ---------------------------------------------------------------------
+// Ventas — stock availability (produced minus already-sold, per finca+derivado)
+// ---------------------------------------------------------------------
+
+/** Qq of one derivado attributed to one finca across every turno, via the same proportional split used everywhere else (atribuirTurnosPorFinca). */
+export function calcularQqProducido(fincaId, derivado, turnos, basculas) {
+  const atribucion = atribuirTurnosPorFinca(turnos, basculas)
+  return atribucion.get(fincaId ?? null)?.derivados[derivado] ?? 0
+}
+
+/**
+ * Qq of one derivado already sold for one finca, from existing ventas rows.
+ * excludeVentaId lets an edit check availability against every OTHER venta
+ * without double-counting its own prior value.
+ */
+export function calcularQqVendido(fincaId, derivado, ventas, excludeVentaId = null) {
+  return (ventas ?? [])
+    .filter((v) => (v.finca_id ?? null) === (fincaId ?? null) && v.derivado === derivado && v.id !== excludeVentaId)
+    .reduce((sum, v) => sum + (Number(v.qq_vendidos) || 0), 0)
+}
+
+/**
+ * How much of one derivado a finca has left to sell: produced (proportional
+ * turno attribution) minus already-sold (every other venta). Can go negative
+ * when a finca is already oversold from prior bad data — that's surfaced as
+ * 0 or less, not clamped, so callers can tell "nothing left" apart from
+ * "already over."
+ */
+export function calcularQqDisponibleParaVenta(fincaId, derivado, { turnos, basculas, ventas }, excludeVentaId = null) {
+  const producido = calcularQqProducido(fincaId, derivado, turnos, basculas)
+  const vendido = calcularQqVendido(fincaId, derivado, ventas, excludeVentaId)
+  return producido - vendido
+}
+
 /**
  * Computes the full P&L for one slice of records — every record in a ciclo,
  * just the ones belonging to a single finca within a ciclo, or (via

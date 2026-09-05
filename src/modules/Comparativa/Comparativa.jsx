@@ -64,7 +64,7 @@ function TrendChart({ puntos, formato, label }) {
   const innerW = width - padding.left - padding.right
   const innerH = height - padding.top - padding.bottom
 
-  const valores = puntos.map((p) => p.valor)
+  const valores = puntos.map((p) => p.valor).filter((v) => v != null)
   const minVal = Math.min(0, ...valores)
   const maxVal = Math.max(0, ...valores, minVal + 1)
   const rango = maxVal - minVal || 1
@@ -73,7 +73,19 @@ function TrendChart({ puntos, formato, label }) {
   const y = (v) => padding.top + innerH - ((v - minVal) / rango) * innerH
   const zeroY = y(0)
 
-  const pathD = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(p.valor).toFixed(1)}`).join(' ')
+  // Un ciclo sin dato para esta métrica corta la línea (nuevo "M") en vez de
+  // conectarse a un cero falso — así no se confunde "sin datos" con
+  // "actividad real en cero".
+  let pathD = ''
+  let trazoAbierto = false
+  puntos.forEach((p, i) => {
+    if (p.valor == null) {
+      trazoAbierto = false
+      return
+    }
+    pathD += `${trazoAbierto ? ' L' : (pathD ? ' M' : 'M')} ${x(i).toFixed(1)} ${y(p.valor).toFixed(1)}`
+    trazoAbierto = true
+  })
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto', display: 'block' }} role="img" aria-label={`Tendencia de ${label}`}>
@@ -83,14 +95,23 @@ function TrendChart({ puntos, formato, label }) {
       <path d={pathD} fill="none" stroke="var(--green)" strokeWidth="2.5" />
       {puntos.map((p, i) => (
         <g key={p.ciclo.id}>
-          {enCurso(p.ciclo) ? (
-            <circle cx={x(i)} cy={y(p.valor)} r="5" fill="var(--white)" stroke="var(--amber)" strokeWidth="2.5" />
-          ) : (
-            <circle cx={x(i)} cy={y(p.valor)} r="4.5" fill="var(--green)" />
+          {p.valor != null && (
+            <>
+              {enCurso(p.ciclo) ? (
+                <circle cx={x(i)} cy={y(p.valor)} r="5" fill="var(--white)" stroke="var(--amber)" strokeWidth="2.5" />
+              ) : (
+                <circle cx={x(i)} cy={y(p.valor)} r="4.5" fill="var(--green)" />
+              )}
+              <text x={x(i)} y={y(p.valor) - 12} textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--ink)">
+                {formatearValor(formato, p.valor)}
+              </text>
+            </>
           )}
-          <text x={x(i)} y={y(p.valor) - 12} textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--ink)">
-            {formatearValor(formato, p.valor)}
-          </text>
+          {p.valor == null && (
+            <text x={x(i)} y={height / 2} textAnchor="middle" fontSize="11" fill="var(--ink3)">
+              sin datos
+            </text>
+          )}
           <text x={x(i)} y={height - 20} textAnchor="middle" fontSize="11" fill="var(--ink3)">
             {formatDateShort(p.ciclo.inicio)}
           </text>
@@ -181,7 +202,10 @@ export default function Comparativa() {
   const seleccionOrdenada = ciclosOrdenados.filter((c) => seleccionados.includes(c.id))
   const soloUnCiclo = ciclosOrdenados.length === 1
   const metricaActual = METRICAS_TENDENCIA.find((m) => m.key === metricaTendencia) ?? METRICAS_TENDENCIA[0]
-  const puntosTendencia = ciclosOrdenados.map((c) => ({ ciclo: c, valor: plPorCiclo.get(c.id)?.[metricaActual.key] ?? 0 }))
+  // valor se deja null cuando el ciclo no tiene datos para esta métrica —
+  // TrendChart debe mostrar un vacío ahí, no un cero real indistinguible de
+  // actividad genuina en cero.
+  const puntosTendencia = ciclosOrdenados.map((c) => ({ ciclo: c, valor: plPorCiclo.get(c.id)?.[metricaActual.key] ?? null }))
 
   return (
     <div className="fade-in">

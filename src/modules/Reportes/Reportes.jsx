@@ -178,6 +178,10 @@ export default function Reportes() {
           )}
         </div>
       </div>
+      <p className="field-hint" style={{ marginTop: 6, marginBottom: 16 }}>
+        Costo por qq de granza seca (antes de trillar) vs. precio promedio mezclando todos los derivados vendidos
+        (arroz entero, semolina, puntilla, pallana, fina) — no son la misma unidad de qq.
+      </p>
       {margenDivergenteMsg && <div className="info-banner">ℹ️ {margenDivergenteMsg}</div>}
 
       <div className="section-header">

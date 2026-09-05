@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import { ToastProvider } from './hooks/useToast.jsx'
+import { ConfirmProvider } from './hooks/useConfirm.jsx'
 import { CicloProvider } from './hooks/useCiclo.jsx'
 import { OnboardingProvider } from './hooks/useOnboarding.jsx'
 import LoginPage from './pages/LoginPage.jsx'
@@ -70,9 +71,11 @@ function Gate() {
 export default function App() {
   return (
     <ToastProvider>
-      <AuthProvider>
-        <Gate />
-      </AuthProvider>
+      <ConfirmProvider>
+        <AuthProvider>
+          <Gate />
+        </AuthProvider>
+      </ConfirmProvider>
     </ToastProvider>
   )
 }

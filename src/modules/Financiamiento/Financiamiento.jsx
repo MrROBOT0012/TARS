@@ -4,6 +4,7 @@ import { useCiclo } from '../../hooks/useCiclo.jsx'
 import { useTable, insertRow, updateRow, deleteRow } from '../../hooks/useData'
 import { useToast } from '../../hooks/useToast.jsx'
 import { useErrorHandler } from '../../hooks/useErrorHandler.js'
+import { useConfirm } from '../../hooks/useConfirm.jsx'
 import {
   calcularSaldoFinanciamiento,
   calcularValorGranzaEntregada,
@@ -57,6 +58,7 @@ export default function Financiamiento() {
 
   const { showSuccess } = useToast()
   const handleApiError = useErrorHandler()
+  const confirm = useConfirm()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -123,7 +125,7 @@ export default function Financiamiento() {
   }
 
   async function handleDelete(row) {
-    if (!confirm(`¿Eliminar este movimiento de ${formatCordoba(row.monto)}?`)) return
+    if (!(await confirm(`¿Eliminar este movimiento de ${formatCordoba(row.monto)}?`, { title: 'Eliminar movimiento', confirmLabel: 'Eliminar', danger: true }))) return
     try {
       await deleteRow('financiamientos', row.id)
       showSuccess('Movimiento eliminado')
